@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Restaurants.API.sln",
+                "${workspaceFolder}/Restaurants.API/Restaurants.API.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}Restaurants.API.sln",
+                "${workspaceFolder}/Restaurants.API/Restaurants.API.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/Restaurants.API.sln"
+                "${workspaceFolder}/Restaurants.API/Restaurants.API.sln"
             ],
             "problemMatcher": "$msCompile"
         }
