@@ -1,0 +1,24 @@
+@restaurants-api_HostAddress = https://localhost:7186
+
+###
+
+GET {{restaurants-api_HostAddress}}/weatherforecast/
+Accept: application/json
+Guid: {{$guid}}
+LocalDate: {{$datetime iso8601}}
+Random-int: {{$randomInt}}
+
+###
+
+POST {{restaurants-api_HostAddress}}/weatherforecast/
+Content-Type: application/json
+
+{
+    "weatherForecast ": "my forecast"
+}
+
+###
+
+GET {{restaurants-api_HostAddress}}/weatherforecast
+
+
