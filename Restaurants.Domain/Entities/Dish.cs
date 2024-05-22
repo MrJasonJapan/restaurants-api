@@ -9,5 +9,9 @@ public class Dish
     public string Description { get; set; } = default!;
 
     public decimal Price { get; set; }
+
+
+    // --- Relationships ---
+    public int RestaurantId { get; set; }
 }
 

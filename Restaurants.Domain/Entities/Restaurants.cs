@@ -1,6 +1,6 @@
 ﻿namespace Restaurants.Domain.Entities;
 
-public class Restaurants
+public class Restaurant
 {
     public int Id { get; set; }
 
