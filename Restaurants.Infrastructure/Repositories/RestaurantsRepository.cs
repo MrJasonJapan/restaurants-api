@@ -7,7 +7,7 @@ namespace Restaurants.Infrastructure.Repositories;
 
 public class RestaurantsRepository(RestaurantsDbContext dbContext) : IRestaurantsRepository
 {
-    public async Task<IEnumerable<Restaurant>> GetAll()
+    public async Task<IEnumerable<Restaurant>> GetAllRestaurants()
     {
         var restaurants = await dbContext.Restaurants
             .Include(r => r.Dishes)
@@ -15,4 +15,15 @@ public class RestaurantsRepository(RestaurantsDbContext dbContext) : IRestaurant
 
         return restaurants;
     }
+
+    // get restaurant by id
+    public async Task<Restaurant?> GetRestaurantById(int id)
+    {
+        var restaurant = await dbContext.Restaurants
+            .Include(r => r.Dishes)
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        return restaurant;
+    }
+
 }
