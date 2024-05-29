@@ -16,8 +16,8 @@ Content-Type: application/json
 
 {
     "Name": "Ne",
-    "Description": "New Restaurant Description",
-    "Category": "",
+    "Description": "",
+    "Category": "Missing Category",
     "HasDelivery": true,
     "ContactEmail": "dummy@@email.com",
     "ContactNumber": "a1234567890",
