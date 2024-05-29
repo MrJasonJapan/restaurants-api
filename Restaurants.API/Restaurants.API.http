@@ -6,6 +6,22 @@ GET {{Restaurants.API_HostAddress}}/api/restaurants
 
 ###
 
-GET {{Restaurants.API_HostAddress}}/api/restaurants/3
+GET {{Restaurants.API_HostAddress}}/api/restaurants/5
 
 ###
+
+// add new restaurant
+POST {{Restaurants.API_HostAddress}}/api/restaurants
+Content-Type: application/json
+
+{
+    "Name": "New Restaurant",
+    "Description": "New Restaurant Description",
+    "Category": "New Restaurant Category",
+    "HasDelivery": true,
+    "ContactEmail": "dummy@email.com",
+    "ContactNumber": "1234567890",
+    "City": "New City",
+    "Street": "New Street",
+    "PostalCode": "123456"
+}
