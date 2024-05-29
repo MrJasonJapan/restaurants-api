@@ -1,6 +1,8 @@
-namespace Restaurants.Application.Restaurants.Dtos;
+using MediatR;
 
-public class CreateRestaurantDto
+namespace Restaurants.Application.Commands.CreateRestaurant;
+
+public class CreateRestaurantCommand : IRequest<int>
 {
     public string Name { get; set; } = default!;
 
@@ -20,3 +22,4 @@ public class CreateRestaurantDto
 
     public string? PostalCode { get; set; }
 }
+

@@ -1,16 +1,16 @@
 using FluentValidation;
-using Restaurants.Application.Restaurants.Dtos;
+using Restaurants.Application.Commands.CreateRestaurant;
 
 namespace Restaurants.Application.Restaurants.Validators;
 
 // An "Abastract" class is a class that cannot be instantiated on its own, but can be inherited by other classes.
 // This can be beneficial when you want to create a class that should not be instantiated, but should be inherited by other classes.
-public class CreateRestaurantDtoValidator : AbstractValidator<CreateRestaurantDto>
+public class CreateRestaurantCommandValidator : AbstractValidator<CreateRestaurantCommand>
 {
 
     private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
 
-    public CreateRestaurantDtoValidator()
+    public CreateRestaurantCommandValidator()
     {
         RuleFor(dto => dto.Name)
             .Length(3, 100);

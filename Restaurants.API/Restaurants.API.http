@@ -10,7 +10,7 @@ GET {{Restaurants.API_HostAddress}}/api/restaurants/5
 
 ###
 
-// add new restaurant
+// add new restaurant (not valid)
 POST {{Restaurants.API_HostAddress}}/api/restaurants
 Content-Type: application/json
 
@@ -24,4 +24,22 @@ Content-Type: application/json
     "City": "New City",
     "Street": "New Street",
     "PostalCode": "123456"
+}
+
+###
+
+// add new restaurant (valid)
+POST {{Restaurants.API_HostAddress}}/api/restaurants
+Content-Type: application/json
+
+{
+    "Name": "Godzila Burger",
+    "Description": "Scorching Hot",
+    "Category": "Japanese",
+    "HasDelivery": true,
+    "ContactEmail": "dummy@email.com",
+    "ContactNumber": "1234567890",
+    "City": "New City",
+    "Street": "New Street",
+    "PostalCode": "123-4567"
 }
