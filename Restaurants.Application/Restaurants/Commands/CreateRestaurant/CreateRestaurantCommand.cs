@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace Restaurants.Application.Commands.CreateRestaurant;
+namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
 
 public class CreateRestaurantCommand : IRequest<int>
 {

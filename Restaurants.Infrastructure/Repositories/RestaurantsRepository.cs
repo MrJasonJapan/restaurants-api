@@ -33,10 +33,12 @@ public class RestaurantsRepository(RestaurantsDbContext dbContext) : IRestaurant
         return restaurant;
     }
 
+    public async Task SaveChanges()
+        => await dbContext.SaveChangesAsync();
+
     public async Task Delete(Restaurant entity)
     {
         dbContext.Restaurants.Remove(entity);
         await dbContext.SaveChangesAsync();
-    }    
-
+    }
 }

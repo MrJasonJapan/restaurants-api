@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Restaurants.Domain.Entities;
 using Restaurants.Domain.Repositories;
 
-namespace Restaurants.Application.Commands.CreateRestaurant;
+namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
 
 // handler class
 public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandler> logger,

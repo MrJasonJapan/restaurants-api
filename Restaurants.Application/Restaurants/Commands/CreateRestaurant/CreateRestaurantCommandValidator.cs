@@ -1,5 +1,5 @@
 using FluentValidation;
-using Restaurants.Application.Commands.CreateRestaurant;
+using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
 
 namespace Restaurants.Application.Restaurants.Validators;
 

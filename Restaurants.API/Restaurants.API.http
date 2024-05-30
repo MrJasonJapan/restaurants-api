@@ -46,6 +46,30 @@ Content-Type: application/json
 
 ###
 
+// update restaurant (not valid)
+PATCH {{Restaurants.API_HostAddress}}/api/restaurants/5
+Content-Type: application/json
+
+{
+    "Name": "12",
+    "Description": "",
+    "HasDelivery": true
+}
+
+###
+
+// update restaurant (valid)
+PATCH {{Restaurants.API_HostAddress}}/api/restaurants/5
+Content-Type: application/json
+
+{
+    "Name": "New Restaurant (edit 1)",
+    "Description": "New Restaurant Description (edit 1)",
+    "HasDelivery": false
+}
+
+###
+
 // delete restaurant
 DELETE {{Restaurants.API_HostAddress}}/api/restaurants/88
 

@@ -1,5 +1,6 @@
 using AutoMapper;
-using Restaurants.Application.Commands.CreateRestaurant;
+using Restaurants.Application.Commands.UpdateRestaurant;
+using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
 using Restaurants.Domain.Entities;
 
 namespace Restaurants.Application.Restaurants.Dtos;
@@ -16,6 +17,9 @@ public class RestaurantsProfile : Profile
                 Street = dto.Street,
                 PostalCode = dto.PostalCode
             }));
+
+        // map for updating a restaurant from a CreateRestaurantCommand
+        CreateMap<UpdateRestaurantCommand, Restaurant>();
 
         // map for creating a RestaurantDto from a Restaurant
         CreateMap<Restaurant, RestaurantDto>()
