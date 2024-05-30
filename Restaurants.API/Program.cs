@@ -2,14 +2,14 @@ using Restaurants.Infrastructure.Extensions;
 using Restaurants.Infrastructure.Seeders;
 using Restaurants.Application.Extensions;
 using Serilog;
-using Serilog.Events;
-
 
 // --- Create new app, configure services, then build it ---
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddApplication();
 
@@ -35,6 +35,12 @@ await seeder.Seed();
 
 // Capture log details about executed requests
 app.UseSerilogRequestLogging();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 
