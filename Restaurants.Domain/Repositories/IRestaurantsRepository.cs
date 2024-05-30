@@ -9,5 +9,7 @@ namespace Restaurants.Domain.Repositories
         Task<IEnumerable<Restaurant>> GetAll();
 
         Task<Restaurant?> GetById(int id);
+
+        Task Delete(Restaurant entity);
     }
 }

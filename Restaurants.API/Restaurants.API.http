@@ -43,3 +43,9 @@ Content-Type: application/json
     "Street": "New Street",
     "PostalCode": "123-4567"
 }
+
+###
+
+// delete restaurant
+DELETE {{Restaurants.API_HostAddress}}/api/restaurants/88
+

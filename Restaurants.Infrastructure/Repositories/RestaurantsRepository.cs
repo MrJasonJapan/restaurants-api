@@ -24,7 +24,6 @@ public class RestaurantsRepository(RestaurantsDbContext dbContext) : IRestaurant
         return restaurants;
     }
 
-    // get restaurant by id
     public async Task<Restaurant?> GetById(int id)
     {
         var restaurant = await dbContext.Restaurants
@@ -33,5 +32,11 @@ public class RestaurantsRepository(RestaurantsDbContext dbContext) : IRestaurant
 
         return restaurant;
     }
+
+    public async Task Delete(Restaurant entity)
+    {
+        dbContext.Restaurants.Remove(entity);
+        await dbContext.SaveChangesAsync();
+    }    
 
 }
