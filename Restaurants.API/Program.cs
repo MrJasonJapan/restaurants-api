@@ -2,6 +2,7 @@ using Restaurants.Infrastructure.Extensions;
 using Restaurants.Infrastructure.Seeders;
 using Restaurants.Application.Extensions;
 using Serilog;
+using restaurants_api.Middleware;
 
 // --- Create new app, configure services, then build it ---
 
@@ -10,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<ErrorHandlingMiddleware>();
 
 builder.Services.AddApplication();
 
@@ -32,6 +35,9 @@ await seeder.Seed();
 
 
 // --- Configure the HTTP request pipeline (also known as middleware), and run the app ---
+
+// Use as the first middleware in the pipeline, so that it can catch any exceptions thrown by the application at any point in the pipeline.
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 // Capture log details about executed requests
 app.UseSerilogRequestLogging();
