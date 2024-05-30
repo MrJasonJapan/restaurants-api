@@ -1,10 +1,10 @@
 @Restaurants.API_HostAddress = https://localhost:7186
 
-###
+### Get all restaurants
 
 GET {{Restaurants.API_HostAddress}}/api/restaurants
 
-###
+### Get a restaurant by id
 
 GET {{Restaurants.API_HostAddress}}/api/restaurants/5
 
