@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Restaurants.Application.Restaurants.Dtos;
 using Restaurants.Domain.Repositories;
 
-namespace Restaurants.Application.Queries.GetAllRestaurants;
+namespace Restaurants.Application.Restaurants.Queries.GetAllRestaurants;
 
 public class GetAllRestaurantsQueryHandler(
     ILogger<GetAllRestaurantsQueryHandler> logger,

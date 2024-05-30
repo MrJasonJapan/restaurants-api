@@ -33,7 +33,7 @@ POST {{Restaurants.API_HostAddress}}/api/restaurants
 Content-Type: application/json
 
 {
-    "Name": "Godzila Burger",
+    "Name": "Godzila Burger Max",
     "Description": "Scorching Hot",
     "Category": "Japanese",
     "HasDelivery": true,
@@ -71,5 +71,5 @@ Content-Type: application/json
 ###
 
 // delete restaurant
-DELETE {{Restaurants.API_HostAddress}}/api/restaurants/88
+DELETE {{Restaurants.API_HostAddress}}/api/restaurants/13
 
