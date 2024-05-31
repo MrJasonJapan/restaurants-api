@@ -14,6 +14,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 
+builder.Services.AddScoped<RequestTimeLoggingMiddleware>();
+
 builder.Services.AddApplication();
 
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -38,6 +40,8 @@ await seeder.Seed();
 
 // Use as the first middleware in the pipeline, so that it can catch any exceptions thrown by the application at any point in the pipeline.
 app.UseMiddleware<ErrorHandlingMiddleware>();
+
+app.UseMiddleware<RequestTimeLoggingMiddleware>();
 
 // Capture log details about executed requests
 app.UseSerilogRequestLogging();

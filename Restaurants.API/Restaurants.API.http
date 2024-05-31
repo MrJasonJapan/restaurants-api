@@ -1,15 +1,12 @@
 @Restaurants.API_HostAddress = https://localhost:7186
 
 ### Get all restaurants
-
 GET {{Restaurants.API_HostAddress}}/api/restaurants
 
 ### Get a restaurant by id
-
 GET {{Restaurants.API_HostAddress}}/api/restaurants/55
 
 ###
-
 // add new restaurant (not valid)
 POST {{Restaurants.API_HostAddress}}/api/restaurants
 Content-Type: application/json
@@ -27,7 +24,6 @@ Content-Type: application/json
 }
 
 ###
-
 // add new restaurant (valid)
 POST {{Restaurants.API_HostAddress}}/api/restaurants
 Content-Type: application/json
@@ -43,7 +39,6 @@ Content-Type: application/json
     "Street": "New Street",
     "PostalCode": "123-4567"
 }
-
 ###
 
 // update restaurant (not valid)
@@ -57,7 +52,6 @@ Content-Type: application/json
 }
 
 ###
-
 // update restaurant (valid)
 PATCH {{Restaurants.API_HostAddress}}/api/restaurants/3
 Content-Type: application/json
@@ -67,7 +61,6 @@ Content-Type: application/json
     "Description": "New Restaurant Description (edit 1)",
     "HasDelivery": false
 }
-
 ###
 
 // delete restaurant
