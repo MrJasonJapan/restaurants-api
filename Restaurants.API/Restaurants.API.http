@@ -6,7 +6,7 @@ GET {{Restaurants.API_HostAddress}}/api/restaurants
 
 ### Get a restaurant by id
 
-GET {{Restaurants.API_HostAddress}}/api/restaurants/5
+GET {{Restaurants.API_HostAddress}}/api/restaurants/55
 
 ###
 
@@ -59,7 +59,7 @@ Content-Type: application/json
 ###
 
 // update restaurant (valid)
-PATCH {{Restaurants.API_HostAddress}}/api/restaurants/5
+PATCH {{Restaurants.API_HostAddress}}/api/restaurants/3
 Content-Type: application/json
 
 {
