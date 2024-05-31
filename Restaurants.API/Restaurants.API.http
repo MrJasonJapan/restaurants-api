@@ -39,8 +39,8 @@ Content-Type: application/json
     "Street": "New Street",
     "PostalCode": "123-4567"
 }
-###
 
+###
 // update restaurant (not valid)
 PATCH {{Restaurants.API_HostAddress}}/api/restaurants/5
 Content-Type: application/json
@@ -61,8 +61,31 @@ Content-Type: application/json
     "Description": "New Restaurant Description (edit 1)",
     "HasDelivery": false
 }
-###
 
+###
 // delete restaurant
 DELETE {{Restaurants.API_HostAddress}}/api/restaurants/13
 
+###
+// add a new dish to a restaurant (invalid)
+POST {{Restaurants.API_HostAddress}}/api/restaurants/3/dishes
+Content-Type: application/json
+
+{
+    "Name": "Godzila Cheeese Burger",
+    "Description": "Super Cheezy, Super Calorie",
+    "Price": -1,
+    "KiloCalories": -1
+}
+
+###
+// add a new dish to a restaurant (vaoid)
+POST {{Restaurants.API_HostAddress}}/api/restaurants/3/dishes
+Content-Type: application/json
+
+{
+    "Name": "Godzila Cheeese Burger 2",
+    "Description": "Super Cheezy, Super Calorie 2",
+    "Price": 12.99,
+    "KiloCalories": 1200
+}
