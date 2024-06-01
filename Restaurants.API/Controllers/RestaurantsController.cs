@@ -13,6 +13,15 @@ namespace Restaurants.API.Controllers;
 [Route("api/[controller]")]
 public class RestaurantsController(IMediator mediator) : ControllerBase
 {
+    [HttpPost]
+    // FluentValidator will automatically validate the request because we have scanned the assembly and it knows that CreateRestaurantCommand has a validator.
+    public async Task<IActionResult> CreateRestaurant(CreateRestaurantCommand command)
+    {
+        int id = await mediator.Send(command);
+
+        return CreatedAtAction(nameof(GetById), new { id }, null);
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetAll()
     {
@@ -28,15 +37,6 @@ public class RestaurantsController(IMediator mediator) : ControllerBase
         var restaurant = await mediator.Send(new GetRestaurantByIdQuery(id));
 
         return Ok(restaurant);
-    }
-
-    [HttpPost]
-    // FluentValidator will automatically validate the request because we have scanned the assembly and it knows that CreateRestaurantCommand has a validator.
-    public async Task<IActionResult> CreateRestaurant(CreateRestaurantCommand command)
-    {
-        int id = await mediator.Send(command);
-
-        return CreatedAtAction(nameof(GetById), new { id }, null);
     }
 
     [HttpPatch("{id}")]

@@ -89,3 +89,11 @@ Content-Type: application/json
     "Price": 12.99,
     "KiloCalories": 1200
 }
+
+###
+// get all dishes for a specific restaurant
+GET {{Restaurants.API_HostAddress}}/api/restaurants/3/dishes/
+
+###
+// get dish for a specific restaurant
+GET {{Restaurants.API_HostAddress}}/api/restaurants/3/dishes/5
