@@ -97,3 +97,7 @@ GET {{Restaurants.API_HostAddress}}/api/restaurants/3/dishes/
 ###
 // get dish for a specific restaurant
 GET {{Restaurants.API_HostAddress}}/api/restaurants/3/dishes/5
+
+###
+// remove dishes from a restaurant
+DELETE {{Restaurants.API_HostAddress}}/api/restaurants/3/dishes
