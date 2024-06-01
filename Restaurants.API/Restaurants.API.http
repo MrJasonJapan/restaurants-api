@@ -79,7 +79,7 @@ Content-Type: application/json
 }
 
 ###
-// add a new dish to a restaurant (vaoid)
+// add a new dish to a restaurant (valid)
 POST {{Restaurants.API_HostAddress}}/api/restaurants/3/dishes
 Content-Type: application/json
 
