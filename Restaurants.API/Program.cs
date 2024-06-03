@@ -4,6 +4,7 @@ using Restaurants.Application.Extensions;
 using Serilog;
 using restaurants_api.Middleware;
 using Restaurants.Domain.Entities;
+using Microsoft.OpenApi.Models;
 
 // --- Create new app, configure services, then build it ---
 
@@ -11,7 +12,30 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    // Allow swagger to show a UI element to save a token as specified by the user.
+    c.AddSecurityDefinition("bearerAuth", new OpenApiSecurityScheme()
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer"
+    });
+
+    // Add setting that will map the "bearerAuth" security definition to all endpoints, 
+    // so that swagger will know to include the UI-saved token in each request.
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "bearerAuth"}
+            },
+            []
+        }
+    });
+});
+
+builder.Services.AddEndpointsApiExplorer(); // Required for Swagger UI to include "minimal" enpoints as added by identity framework.
 
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 
@@ -55,7 +79,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapIdentityApi<User>(); // Adds endpoints for user management (register, login, etc.)
+app.MapGroup("api/identity").MapIdentityApi<User>(); // Adds endpoints for user management (register, login, etc.), under the "api/identity" route.
 
 app.UseAuthorization();
 
