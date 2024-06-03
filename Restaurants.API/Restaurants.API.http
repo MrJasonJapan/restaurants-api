@@ -1,5 +1,23 @@
 @Restaurants.API_HostAddress = https://localhost:7186
 
+### register new identity user
+POST {{Restaurants.API_HostAddress}}/register
+Content-Type: application/json
+
+{
+    "email": "testuser@test.com",
+    "password": "Password1!"
+}
+
+### login with user
+POST {{Restaurants.API_HostAddress}}/login
+Content-Type: application/json
+
+{
+    "email": "testuser@test.com",
+    "password": "Password1!"
+}
+
 ### Get all restaurants
 GET {{Restaurants.API_HostAddress}}/api/restaurants
 

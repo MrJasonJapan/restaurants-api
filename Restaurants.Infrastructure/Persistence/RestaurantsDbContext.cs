@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Restaurants.Domain.Entities;
 
 namespace Restaurants.Infrastructure.Persistence;
 
-public class RestaurantsDbContext(DbContextOptions<RestaurantsDbContext> options) : DbContext(options)
+public class RestaurantsDbContext(DbContextOptions<RestaurantsDbContext> options) : IdentityDbContext<User>(options)
 {
     internal DbSet<Restaurant> Restaurants { get; set; }
 

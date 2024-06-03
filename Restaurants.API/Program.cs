@@ -3,6 +3,7 @@ using Restaurants.Infrastructure.Seeders;
 using Restaurants.Application.Extensions;
 using Serilog;
 using restaurants_api.Middleware;
+using Restaurants.Domain.Entities;
 
 // --- Create new app, configure services, then build it ---
 
@@ -53,6 +54,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapIdentityApi<User>(); // Adds endpoints for user management (register, login, etc.)
 
 app.UseAuthorization();
 
