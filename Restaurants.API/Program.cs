@@ -52,7 +52,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGroup("api/identity").MapIdentityApi<User>(); // Adds endpoints for user management (register, login, etc.), under the "api/identity" route.
+app.MapGroup("api/identity")
+    .WithTags("Identity") // With this our "IdentityController" will be grouped under the "Identity" tag in the Swagger UI.
+    .MapIdentityApi<User>(); // Adds endpoints for user management (register, login, etc.), under the "api/identity" route.
 
 app.UseAuthorization();
 

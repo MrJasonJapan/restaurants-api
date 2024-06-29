@@ -1,7 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
-using Restaurants.Application.Restaurants;
+using Restaurants.Application.Users;
 
 namespace Restaurants.Application.Extensions;
 
@@ -26,5 +26,11 @@ public static class ServiceCollectionExtensions
         // and we know what requests to validate because we have scanned the assembly and know what classes have validators.
         services.AddValidatorsFromAssembly(applicationAssembly)
             .AddFluentValidationAutoValidation();
+
+        // Register the UserContext class in the DI container so we can inject the IuserContext interface into any Handler in the application layer.
+        services.AddScoped<IUserContext, UserContext>();
+
+        // This will allow us to inject the HttpContextAccessor into the UserContext class.
+        services.AddHttpContextAccessor();
     }
 }
