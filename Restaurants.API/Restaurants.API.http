@@ -1,7 +1,8 @@
 @Restaurants.API_HostAddress = https://localhost:7186
+@token = CfDJ8I8Ml1iyMZlKt_jZErXGSZdmwQnAUer-3FgBNvimqJdnUi2I6afjLhHfrNrNLu4Ob5HqbzBBmkMndXJdQYCX3ZODEovvZC7gqW59BL8TtuKMu6X87d-3EuyE2U7bszOeT4l_bkqIGqAv_AQM3N-9QwFLQ25tf-vwplJsPWPszn6x3vQutJsTODejJjFjauFrWxRUbYagaOmbHHAC7Ogk50XdTOSQG6nmg41Vr5dtjF5HmPbyqyXI631inmt-cDME6k0LBTeuZWbEzCh6hvHovWZpAcvezKQf3UrqLqKMHVxXl7lQ3huqs9e76pP9M2WggldFyUSgR4E_2PRde9j4OKae-OcDUEhWi4UVmTsqGIs2OmDekYB76lotEpfgKLYNEqURtKd-DlnVEWLqofOVUEGSHVlD2zlTjLyrrWYldxYjxmvFSNOVIjGKK7CYIAp1f9guxaQaMQZqNLYdzdVMrWubUgwV5L6IdhlZznpLJkb_j-JezJuK8gW84Lj68de1VgarTzZx8LPUyQcMXpfSSQ6Xo8Eqci5DO0Y95DQZ26UyFEQVgrquReBS3M2ssordQ0qQ3JQihUDZxjYg5By_rlZUwbxI_tiXl7oMmBwYp1KL4VHt17zu2J0KiBZUpg-IAsTKLiaD9B3QkRTgIWq5b-5vsZJlYoJNPtrUceeyWpa809zwWtFlnOeg_Q1vwgQNsQ
 
 ### register new identity user
-POST {{Restaurants.API_HostAddress}}/register
+POST {{Restaurants.API_HostAddress}}/api/identity/register
 Content-Type: application/json
 
 {
@@ -10,7 +11,7 @@ Content-Type: application/json
 }
 
 ### login with user
-POST {{Restaurants.API_HostAddress}}/login
+POST {{Restaurants.API_HostAddress}}/api/identity/login
 Content-Type: application/json
 
 {
@@ -22,7 +23,8 @@ Content-Type: application/json
 GET {{Restaurants.API_HostAddress}}/api/restaurants
 
 ### Get a restaurant by id
-GET {{Restaurants.API_HostAddress}}/api/restaurants/55
+GET {{Restaurants.API_HostAddress}}/api/restaurants/3
+Authorization: Bearer {{token}}
 
 ###
 // add new restaurant (not valid)
