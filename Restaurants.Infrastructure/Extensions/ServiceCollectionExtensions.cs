@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ public static class ServiceCollectionExtensions
                 .EnableSensitiveDataLogging());
 
         services.AddIdentityApiEndpoints<User>() // Adds endpoints for user management (register, login, etc.)
+            .AddRoles<IdentityRole>() // Adds roles for user management (user, owner, admin, etc.)
             .AddEntityFrameworkStores<RestaurantsDbContext>(); // Repositories for user management (roles, managing users, etc.)
 
         services.AddScoped<IRestaurantSeeder, RestaurantSeeder>();

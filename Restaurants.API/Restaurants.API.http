@@ -1,12 +1,12 @@
 @Restaurants.API_HostAddress = https://localhost:7186
-@token = CfDJ8I8Ml1iyMZlKt_jZErXGSZdmwQnAUer-3FgBNvimqJdnUi2I6afjLhHfrNrNLu4Ob5HqbzBBmkMndXJdQYCX3ZODEovvZC7gqW59BL8TtuKMu6X87d-3EuyE2U7bszOeT4l_bkqIGqAv_AQM3N-9QwFLQ25tf-vwplJsPWPszn6x3vQutJsTODejJjFjauFrWxRUbYagaOmbHHAC7Ogk50XdTOSQG6nmg41Vr5dtjF5HmPbyqyXI631inmt-cDME6k0LBTeuZWbEzCh6hvHovWZpAcvezKQf3UrqLqKMHVxXl7lQ3huqs9e76pP9M2WggldFyUSgR4E_2PRde9j4OKae-OcDUEhWi4UVmTsqGIs2OmDekYB76lotEpfgKLYNEqURtKd-DlnVEWLqofOVUEGSHVlD2zlTjLyrrWYldxYjxmvFSNOVIjGKK7CYIAp1f9guxaQaMQZqNLYdzdVMrWubUgwV5L6IdhlZznpLJkb_j-JezJuK8gW84Lj68de1VgarTzZx8LPUyQcMXpfSSQ6Xo8Eqci5DO0Y95DQZ26UyFEQVgrquReBS3M2ssordQ0qQ3JQihUDZxjYg5By_rlZUwbxI_tiXl7oMmBwYp1KL4VHt17zu2J0KiBZUpg-IAsTKLiaD9B3QkRTgIWq5b-5vsZJlYoJNPtrUceeyWpa809zwWtFlnOeg_Q1vwgQNsQ
+@token = CfDJ8I8Ml1iyMZlKt_jZErXGSZcmAC9PYy09A0Zn_qIFIBAy-R3oqZEN8ljFSekUCF8o9ZC_KaietNaA5doE_OBaHcw02aQlrTw4bm8BejNwfgzjngQbwfhtRUVHzO_6FeFjLdGWGVCMjrRvqLnHb2VZ2yByXgv4ToXZPu6smyKoGfSp3JvKEoAQGNPNJ_mriYvOt91XhnFa7m5AVdrf9subwASLJYsvQHdQq6wnTCmWduPpI4roI7MERqYR1e3zSZvIj1naJSXQhVq7a09JRYfFsO_lM8-zY8vHfkx2NJJravh9IS7LC4HY8LRZm8JfLuVhph06Kk6QGxtc9bH-U0CeKDVau3jXwngzNKBXCvzw-yjHTMkRQIuBiMCtsYUyqLS8tlzR_d0wkP7aowWjGKEvPaHzHdaFNeB3DMEixvui7hojt1gmalGXjiQb5dhGO79zRlupkPNcs1tCVNbZiJTUwxonklSsmB8fZlc8XXTPYpMUom1tL4aPoRblSMFtz245bQe9FV0qmVdAtOFrjsrCmoja_MvnsJaWqUI7pIK1laX9-IH6r50TUt5riTh0E4O7CLeFg2WtPBQufmPPWKjCwSE3CrG964xrwmrSWwrCs2-lodBBFryTYwnLs1J_bcqClSyL4CND2gjylUWi8f3YEO4GnPWJFA6RKqUnhgDBbvF16IypN0-KmvDVeIxKMlYDlQX7CziOZF1FRFDnaHV7QG8HVUsXJbibXGVhXIyh0maHmRroo7R_CEGxla5TdGGxPRkf3a48b5H06aottVlawRYY9tiJzM0PiQT43Zc-QdsL
 
 ### register new identity user
 POST {{Restaurants.API_HostAddress}}/api/identity/register
 Content-Type: application/json
 
 {
-    "email": "testuser@test.com",
+    "email": "user@test.com",
     "password": "Password1!"
 }
 
@@ -15,7 +15,7 @@ POST {{Restaurants.API_HostAddress}}/api/identity/login
 Content-Type: application/json
 
 {
-    "email": "testuser@test.com",
+    "email": "owner@test.com",
     "password": "Password1!"
 }
 
@@ -46,10 +46,11 @@ Content-Type: application/json
 ###
 // add new restaurant (valid)
 POST {{Restaurants.API_HostAddress}}/api/restaurants
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "Name": "Godzila Burger Max",
+    "Name": "Godzila Burger Max by Owner",
     "Description": "Scorching Hot",
     "Category": "Japanese",
     "HasDelivery": true,
