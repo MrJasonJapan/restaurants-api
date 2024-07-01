@@ -40,15 +40,14 @@ internal class RestaurantSeeder(RestaurantsDbContext dbContext) : IRestaurantSee
         // ('03ec03ff-2ce7-4e1c-ad53-8e4457ae2c10', '12ffe98b-143b-4ba9-9665-6480eaef7b26'),
         // ('42d97258-772a-44ea-9cb5-a23f31e8897c', '1e959375-cc4c-4985-858f-fc98875179e1'),
         // ('080b11b1-d8dd-4852-8c9c-123c3331b403', 'c5cfd582-5d06-40e0-acf5-d4a3b3d0bf91')
-
     }
 
     private IEnumerable<IdentityRole> GetRoles()
     {
         List<IdentityRole> roles = [
-            new (UserRoles.User),
-            new (UserRoles.Owner),
-            new (UserRoles.Admin)
+            new (UserRoles.User) { NormalizedName = UserRoles.User.ToUpper()},
+            new (UserRoles.Owner) { NormalizedName = UserRoles.Owner.ToUpper()},
+            new (UserRoles.Admin) { NormalizedName = UserRoles.Admin.ToUpper()}
         ];
 
         return roles;
