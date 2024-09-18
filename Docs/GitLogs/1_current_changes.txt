@@ -1,189 +1,365 @@
+diff --git a/Docs/restaurant_dummy_insert_script.sql b/Docs/restaurant_dummy_insert_script.sql
+new file mode 100644
+index 0000000..0529bff
+--- /dev/null
++++ b/Docs/restaurant_dummy_insert_script.sql
+@@ -0,0 +1,38 @@
++DECLARE @counter INT = 1;
++DECLARE @maxRecords INT = 5000;
++DECLARE @OwnerId NVARCHAR(450) = '731bbb9c-0871-44df-ba30-eab9df9e11cc';
++
++WHILE @counter <= @maxRecords
++BEGIN
++    INSERT INTO [dbo].[Restaurants]
++    (
++        [Name],
++        [Description],
++        [Category],
++        [HasDelivery],
++        [ContactEmail],
++        [ContactNumber],
++        [Address_City],
++        [Address_Street],
++        [Address_PostalCode],
++        [OwnerId]
++    )
++    VALUES
++    (
++        'Restaurant ' + CAST(@counter AS NVARCHAR(10)),          -- Name
++        'Delicious food number ' + CAST(@counter AS NVARCHAR(10)),  -- Description
++        CASE WHEN @counter % 3 = 0 THEN 'Japanese'               -- Category
++             WHEN @counter % 3 = 1 THEN 'Italian'
++             ELSE 'Mexican' 
++        END,
++        CASE WHEN @counter % 2 = 0 THEN 1 ELSE 0 END,            -- HasDelivery (randomly assigns true/false)
++        'email' + CAST(@counter AS NVARCHAR(10)) + '@dummy.com',  -- ContactEmail
++        '123456' + RIGHT('000' + CAST(@counter AS NVARCHAR(10)), 4),  -- ContactNumber
++        'City ' + CAST(@counter AS NVARCHAR(10)),                 -- Address_City
++        'Street ' + CAST(@counter AS NVARCHAR(10)),               -- Address_Street
++        'PostalCode ' + CAST(@counter AS NVARCHAR(10)),           -- Address_PostalCode
++        @OwnerId                                                  -- OwnerId (fixed value)
++    );
++
++    SET @counter = @counter + 1;
++END;
 diff --git a/Restaurants.API/Controllers/RestaurantsController.cs b/Restaurants.API/Controllers/RestaurantsController.cs
-index 7793139..c2f4ed5 100644
+index c2f4ed5..9d8a7d7 100644
 --- a/Restaurants.API/Controllers/RestaurantsController.cs
 +++ b/Restaurants.API/Controllers/RestaurantsController.cs
-@@ -28,7 +28,8 @@ public class RestaurantsController(IMediator mediator) : ControllerBase
+@@ -4,7 +4,6 @@ using Restaurants.Application.Commands.UpdateRestaurant;
+ using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
+ using Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
+ using Restaurants.Application.Restaurants.Queries;
+-using Restaurants.Application.Restaurants.Queries.GetRestaurantById;
+ using Restaurants.Application.Restaurants.Dtos;
+ using Microsoft.AspNetCore.Authorization;
+ using Restaurants.Domain.Constants;
+@@ -28,11 +27,11 @@ public class RestaurantsController(IMediator mediator) : ControllerBase
      }
  
      [HttpGet]
--    [AllowAnonymous]
-+    // [AllowAnonymous]
-+    [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
-     public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetAll()
+-    // [AllowAnonymous]
+-    [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
+-    public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetAll()
++    [AllowAnonymous]
++    // [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
++    public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetAll([FromQuery] GetAllRestaurantsQuery query)
      {
-         var restaurants = await mediator.Send(new GetAllRestaurantsQuery());
-diff --git a/Restaurants.API/Properties/launchSettings.json b/Restaurants.API/Properties/launchSettings.json
-index a600fc1..c7d3783 100644
---- a/Restaurants.API/Properties/launchSettings.json
-+++ b/Restaurants.API/Properties/launchSettings.json
-@@ -9,16 +9,6 @@
+-        var restaurants = await mediator.Send(new GetAllRestaurantsQuery());
++        var restaurants = await mediator.Send(query);
+ 
+         return Ok(restaurants);
      }
-   },
-   "profiles": {
--    "http": {
--      "commandName": "Project",
--      "dotnetRunMessages": true,
--      "launchBrowser": true,
--      "launchUrl": "weatherforecast",
--      "applicationUrl": "http://localhost:5236",
--      "environmentVariables": {
--        "ASPNETCORE_ENVIRONMENT": "Development"
--      }
--    },
-     "https": {
-       "commandName": "Project",
-       "dotnetRunMessages": true,
 diff --git a/Restaurants.API/Restaurants.API.http b/Restaurants.API/Restaurants.API.http
-index 9b7adde..1e6d37d 100644
+index 1e6d37d..482a3b9 100644
 --- a/Restaurants.API/Restaurants.API.http
 +++ b/Restaurants.API/Restaurants.API.http
-@@ -1,12 +1,12 @@
- @Restaurants.API_HostAddress = https://localhost:7186
--@token = CfDJ8JkfaPYyrzRPuEHO__lupsxYbRSlSONXpqy6uGVqkPYqFMDBP1vnMUNnGNsBn3TK8ET-Z-p9dlm7rSC9U7Yz5JwfxQ4duoq2ue_OKRB-x0zoIpiD6JgHS72xOExVR7p1I4mhPL6IMY3MHda6CMisq3bejUwm2JB7KBdv5GOzT_XZIU9P-BEsxKO4W86hFwqXF23GW2VJq41q8FEu3uTB6TEm0vZ8U4l313s-ESRa_8ugf5dY2XOoHKxI40UPlSqtvtvlI6qit8wCUS52MJ_7zJQEuooqjSkFJ-ik1Rxu04b2H056k2ORWBU7aWvd-ShNDjuNOxaLzj1VMR_QnHXXfZOoxK0vVuGnkp7Arolq9TImDj7EBumqd9IY_UbGZmbFAOR7ZnlYymdNqroWv1c4yKZpGX94DpWkNrYOx83kbYJ2zrNr-8uU3kqDi75BxipiP6Sivvrde89_-U0NzQZyofQ8MqnBLLRxOVn4uGLJYbBEdnYUk2mD7gDzjbgMucJFCv4npJZU8JkgYer9ejDrZSmR1Pbqm6GieKBEIyydYOzOgg089JfY3pYhHXPRMCfzr20vdxsUVyXY06gh2RlYbWoBU7aJiitU5ldZAgucoAyIW4AKmNjTLdgEbEYO17GmIEIa-mfTPMW2_y3t20i6re_7I-aXFH0_VIqaIyg3sXw71v775o-MOUa-fHyjc5KRnw_Ke6jnHM6s3qyRRdg0EWC0GVuB_Kdz0NVuJcckf-aeAgTJM5fwWkf_m13lxFTJo2RajbE3iTyef1fYY4qprb_MU7QHTuF1FsqsvqTovOiDPuYofKk3yDnKPHsn7uYcFcXl0VezF1KeXWLlCNWgqbsRsvRJtIhFr42D6_Cc-jEwEOfxFpZv16YIlCZaoeykWVtqHAwyoUL4aQQ27m7O6yw
-+@token = CfDJ8JkfaPYyrzRPuEHO__lupswOYnBzNosCiLwCDRlqK7fraHHa6lcA9iCtpfLb-uKlOya8ioKDaAwTMuIHf1JkgFPCKMMyS4PgQrEYANERGZDF0fRW80b-9zjqMg1-V-riiKF7kwRrGCbnTk2RfMAQ6N38SVq7yQPGPSL7tsDGMG74i4O_5c7amj_MRq3hNt99Uv3bSh6jx3Q5VeCyZvORU5js20YsnRsZfwFEaq05U55mcq9_nHnYZQn137ON7h3FCqR5sg5hUzX17RnlR3vIIz3bog5zpY9DV6aOO4O5hCDpxOwFFuSMy04DNKRGvJGCDtuY1O91-CWd2SZN_l_ZN_O6215jfORiJdTseiRV_jgkX3uWcUkwgAQT3e3YLTzpZx860CWGYBq7KQBnQzUIfbdywxImoGNPzV3ZheXpHCEaZGF2LsMospm9UwaPqappfT8Rout5iuPb1nAe0o5A4qGVKn0jxNonfJbxH1SBMoRg5tYBEesUTtyyjIlRtNFcuWvz-B4F8V4YoZIZUdrPz6cYgkFRcBob4EUTe7wZfNCmUntheRNz5iKlYHQcKQmvC6yeEgRvwaUEqldQl-n4x3Uz9NzWNAenf47I_HEheQDt4cGELDg8W7czQt75snhGUGlo-8gUuRPDDeF8sYUgy3ZNrd95AX-76DmvFdG88WOHfjxiaUOZzd0zgiSC6HQ2FZphpEIerXROqbQNpChpaIp293-YpwHy6lfhsXii-XriG6RUju6fqmMizC6Zd2Ls623ujtcAGOUZ2XZ7rPu4WkOD5qxipyaQ04YoB9bW24lz
- 
- ### register new identity user
- POST {{Restaurants.API_HostAddress}}/api/identity/register
- Content-Type: application/json
- 
- {
--    "email": "admin@test.com",
-+    "email": "owner2@test.com",
-     "password": "Password1!"
+@@ -30,8 +30,13 @@ Authorization: Bearer {{token}}
  }
  
-@@ -15,7 +15,7 @@ POST {{Restaurants.API_HostAddress}}/api/identity/login
- Content-Type: application/json
  
- {
--    "email": "admin@test.com",
-+    "email": "owner2@test.com",
-     "password": "Password1!"
- }
- 
-@@ -25,13 +25,14 @@ Content-Type: application/json
+-### Get all restaurants
+-GET {{Restaurants.API_HostAddress}}/api/restaurants
++### Get all restaurants (with search phrase)
++GET {{Restaurants.API_HostAddress}}/api/restaurants?searchPhrase=hot&pageSize=11113&pageNumber=2
++Authorization: Bearer {{token}}
++
++### Get all restaurants (without search phrase)
++
++GET {{Restaurants.API_HostAddress}}/api/restaurants?pageSize=30&pageNumber=1&sortBy=Description&sortDirection=Ascending
  Authorization: Bearer {{token}}
  
- {
--  "userEmail": "admin@test.com",
--  "roleName": "Admin"
-+  "userEmail": "owner2@test.com",
-+  "roleName": "Owner"
- }
- 
- 
- ### Get all restaurants
- GET {{Restaurants.API_HostAddress}}/api/restaurants
-+Authorization: Bearer {{token}}
- 
  ### Get a restaurant by id
- GET {{Restaurants.API_HostAddress}}/api/restaurants/4
-@@ -43,7 +44,7 @@ POST {{Restaurants.API_HostAddress}}/api/restaurants
- Content-Type: application/json
- 
- {
--    "Name": "Ne",
-+    "Name": "New Restaurant",
-     "Description": "",
-     "Category": "Missing Category",
-     "HasDelivery": true,
-@@ -61,7 +62,7 @@ Authorization: Bearer {{token}}
- Content-Type: application/json
- 
- {
--    "Name": "Godzila Burger Max Again by Owner",
-+    "Name": "Owner 2 Restaurant 2",
-     "Description": "Scorching Hot",
-     "Category": "Japanese",
-     "HasDelivery": true,
-diff --git a/Restaurants.Infrastructure/Authorization/Constants.cs b/Restaurants.Infrastructure/Authorization/Constants.cs
-index f07ce82..f8fb742 100644
---- a/Restaurants.Infrastructure/Authorization/Constants.cs
-+++ b/Restaurants.Infrastructure/Authorization/Constants.cs
-@@ -3,14 +3,13 @@ namespace Restaurants.Infrastructure.Authorization;
- public static class PolicyNames
- {
-     public const string HasNationality = "HasNationality";
--
-     public const string AtLeast20 = "AtLeast20";
-+    public const string CreatedAtLeast2Restaurants = "CreatedAtLeast2Restaurants";
- }
- 
- public static class AppClaimTypes
- {
-     public const string Nationality = "Nationality";
--    
-     public const string DateOfBirth = "DateOfBirth";
- 
- }
-\ No newline at end of file
-diff --git a/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs b/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs
+diff --git a/Restaurants.Application/Common/PagedResult.cs b/Restaurants.Application/Common/PagedResult.cs
 new file mode 100644
-index 0000000..f43f67d
+index 0000000..f3e48cb
 --- /dev/null
-+++ b/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs
-@@ -0,0 +1,8 @@
-+using Microsoft.AspNetCore.Authorization;
++++ b/Restaurants.Application/Common/PagedResult.cs
+@@ -0,0 +1,19 @@
++namespace Restaurants.Application.Common;
 +
-+namespace Restaurants.Infrastructure.Authorization.Requirements;
-+
-+public class CreatedMultipleRestaurantsRequirement(int minimumRestaurantsCreated) : IAuthorizationRequirement
++public class PagedResult<T>
 +{
-+    public int MinimumRestaurantsCreated { get; } = minimumRestaurantsCreated;
++    public PagedResult(IEnumerable<T> items, int totalItems, int pageSize, int pageNumber)
++    {
++        Items = items;
++        TotalItems = totalItems;
++        TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
++        ItemsFrom = pageSize * (pageNumber - 1) + 1;
++        ItemsTo = ItemsFrom + pageSize - 1;
++    }
++
++    public IEnumerable<T> Items { get; set; }
++    public int TotalPages { get; set; }
++    public int ItemsFrom { get; set; }
++    public int ItemsTo { get; set; }
++    public int TotalItems { get; set; }
 +}
-diff --git a/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandler.cs b/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandler.cs
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQuery.cs b/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQuery.cs
+deleted file mode 100644
+index 94ad50e..0000000
+--- a/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQuery.cs
++++ /dev/null
+@@ -1,9 +0,0 @@
+-using MediatR;
+-using Restaurants.Application.Restaurants.Dtos;
+-
+-namespace Restaurants.Application.Restaurants.Queries;
+-
+-public class GetAllRestaurantsQuery : IRequest<IEnumerable<RestaurantDto>>
+-{
+-
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQueryHandler.cs b/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQueryHandler.cs
+deleted file mode 100644
+index a7ceee6..0000000
+--- a/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQueryHandler.cs
++++ /dev/null
+@@ -1,24 +0,0 @@
+-using AutoMapper;
+-using MediatR;
+-using Microsoft.Extensions.Logging;
+-using Restaurants.Application.Restaurants.Dtos;
+-using Restaurants.Domain.Repositories;
+-
+-namespace Restaurants.Application.Restaurants.Queries.GetAllRestaurants;
+-
+-public class GetAllRestaurantsQueryHandler(
+-    ILogger<GetAllRestaurantsQueryHandler> logger,
+-    IMapper mapper,
+-    IRestaurantsRepository restaurantsRepository)
+-    : IRequestHandler<GetAllRestaurantsQuery, IEnumerable<RestaurantDto>>
+-{
+-    public async Task<IEnumerable<RestaurantDto>> Handle(GetAllRestaurantsQuery request, CancellationToken cancellationToken)
+-    {
+-        logger.LogInformation("Getting all restaurants");
+-
+-        var restaurants = await restaurantsRepository.GetAll();
+-        var restaurantDtos = mapper.Map<IEnumerable<RestaurantDto>>(restaurants);
+-
+-        return restaurantDtos!;
+-    }
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs b/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs
 new file mode 100644
-index 0000000..144cc36
+index 0000000..b279633
 --- /dev/null
-+++ b/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandler.cs
-@@ -0,0 +1,30 @@
-+using Microsoft.AspNetCore.Authorization;
-+using Restaurants.Application.Users;
++++ b/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs
+@@ -0,0 +1,69 @@
++using AutoMapper;
++using FluentValidation;
++using MediatR;
++using Microsoft.Extensions.Logging;
++using Restaurants.Application.Common;
++using Restaurants.Application.Restaurants.Dtos;
++using Restaurants.Domain.Constants;
++using Restaurants.Domain.Entities;
 +using Restaurants.Domain.Repositories;
 +
-+namespace Restaurants.Infrastructure.Authorization.Requirements;
++namespace Restaurants.Application.Restaurants.Queries;
 +
-+internal class CreatedMultipleRestaurantsRequirementHandler(
-+    IRestaurantsRepository restaurantsRepository,
-+    IUserContext userContext) : AuthorizationHandler<CreatedMultipleRestaurantsRequirement>
++public class GetAllRestaurantsQuery : IRequest<PagedResult<RestaurantDto>>
 +{
-+    protected override async Task HandleRequirementAsync(
-+        AuthorizationHandlerContext context,
-+        CreatedMultipleRestaurantsRequirement requirement)
++    public string? SearchPhrase { get; set; }
++    public int PageNumber { get; set; }
++    public int PageSize { get; set; }
++    public string? SortBy { get; set; }
++    public SortDirection SortDirection { get; set; }
++}
++
++public class GetAllRestaurantsQueryValidator : AbstractValidator<GetAllRestaurantsQuery>
++{
++    private int[] allowedPageSizes = new[] { 5, 10, 15, 30 };
++    private string[] allowedSortByColumnNames = [ 
++        nameof(Restaurant.Name),
++        nameof(Restaurant.Description),
++        nameof(Restaurant.Category)
++    ];
++
++    public GetAllRestaurantsQueryValidator()
 +    {
-+        var currentUser = userContext.GetCurrentUser();
++        RuleFor(r => r.PageNumber).GreaterThanOrEqualTo(1);
 +
-+        var restaurants = await restaurantsRepository.GetAll();
++        RuleFor(r => r.PageSize)
++            .Must(value => allowedPageSizes.Contains(value))
++            .WithMessage($"PageSize must be in [{string.Join(", ", allowedPageSizes)}]");   
 +
-+        var userRestaurantsCreated = restaurants.Count(r => r.OwnerId == currentUser!.Id);
-+
-+        if (userRestaurantsCreated >= requirement.MinimumRestaurantsCreated)
-+        {
-+            context.Succeed(requirement);
-+        }
-+        else
-+        {
-+            context.Fail();
-+        }
++        RuleFor(r => r.SortBy)
++            .Must(value => allowedSortByColumnNames.Contains(value))
++            .When(q => q.SortBy != null)
++            .WithMessage($"SortBy is optional, or must be in [{string.Join(", ", allowedSortByColumnNames)}]");
 +    }
 +}
-diff --git a/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs b/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
-index 5fb4c08..c9ce47d 100644
---- a/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
-+++ b/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
-@@ -39,10 +39,14 @@ public static class ServiceCollectionExtensions
-             .AddPolicy(PolicyNames.HasNationality,
-                 policy => policy.RequireClaim(AppClaimTypes.Nationality, "Japanese", "German"))
-             .AddPolicy(PolicyNames.AtLeast20,
--                policy => policy.AddRequirements(new MinimumAgeRequirement(20)));
-+                policy => policy.AddRequirements(new MinimumAgeRequirement(20)))
-+            .AddPolicy(PolicyNames.CreatedAtLeast2Restaurants,
-+                policy => policy.AddRequirements(new CreatedMultipleRestaurantsRequirement(2)));
- 
-         services.AddScoped<IAuthorizationHandler, MinimumAgeRequirementHandler>();
- 
-+        services.AddScoped<IAuthorizationHandler, CreatedMultipleRestaurantsRequirementHandler>();
 +
-         services.AddScoped<IRestaurantAuthorizationService, RestaurantAuthorizationService>();
++public class GetAllRestaurantsQueryHandler(
++    ILogger<GetAllRestaurantsQueryHandler> logger,
++    IMapper mapper,
++    IRestaurantsRepository restaurantsRepository)
++    : IRequestHandler<GetAllRestaurantsQuery, PagedResult<RestaurantDto>>
++{
++    public async Task<PagedResult<RestaurantDto>> Handle(GetAllRestaurantsQuery request, CancellationToken cancellationToken)
++    {
++        logger.LogInformation("Getting all restaurants");
++
++        var (restaurants, totalItems) = await restaurantsRepository.GetAllMatching(
++            request.SearchPhrase,
++            request.PageNumber,
++            request.PageSize,
++            request.SortBy,
++            request.SortDirection);
++
++        var restaurantDtos = mapper.Map<IEnumerable<RestaurantDto>>(restaurants);
++
++        var result = new PagedResult<RestaurantDto>(restaurantDtos, totalItems, request.PageSize, request.PageNumber);
++
++        return result;
++    }
++}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQuery.cs b/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQuery.cs
+deleted file mode 100644
+index 27a87b7..0000000
+--- a/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQuery.cs
++++ /dev/null
+@@ -1,9 +0,0 @@
+-using MediatR;
+-using Restaurants.Application.Restaurants.Dtos;
+-
+-namespace Restaurants.Application.Restaurants.Queries.GetRestaurantById;
+-
+-public class GetRestaurantByIdQuery(int id) : IRequest<RestaurantDto>
+-{
+-    public int Id { get; set; } = id;
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQueryHandler.cs b/Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
+similarity index 84%
+rename from Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQueryHandler.cs
+rename to Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
+index b5b791a..9ad47b0 100644
+--- a/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQueryHandler.cs
++++ b/Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
+@@ -6,7 +6,12 @@ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Exceptions;
+ using Restaurants.Domain.Repositories;
+ 
+-namespace Restaurants.Application.Restaurants.Queries.GetRestaurantById;
++namespace Restaurants.Application.Restaurants.Queries;
++
++public class GetRestaurantByIdQuery(int id) : IRequest<RestaurantDto>
++{
++    public int Id { get; set; } = id;
++}
+ 
+ public class GetRestaurantByIdQueryHandler(ILogger<GetRestaurantByIdQueryHandler> logger, IMapper mapper, IRestaurantsRepository restaurantsRepository)
+         : IRequestHandler<GetRestaurantByIdQuery, RestaurantDto?>
+diff --git a/Restaurants.Domain/Constants/SortDirection.cs b/Restaurants.Domain/Constants/SortDirection.cs
+new file mode 100644
+index 0000000..92723f7
+--- /dev/null
++++ b/Restaurants.Domain/Constants/SortDirection.cs
+@@ -0,0 +1,7 @@
++namespace Restaurants.Domain.Constants;
++
++public enum SortDirection
++{
++    Ascending,
++    Descending
++}
+\ No newline at end of file
+diff --git a/Restaurants.Domain/Repositories/IRestaurantsRepository.cs b/Restaurants.Domain/Repositories/IRestaurantsRepository.cs
+index c70fe53..4898d2e 100644
+--- a/Restaurants.Domain/Repositories/IRestaurantsRepository.cs
++++ b/Restaurants.Domain/Repositories/IRestaurantsRepository.cs
+@@ -1,3 +1,4 @@
++using Restaurants.Domain.Constants;
+ using Restaurants.Domain.Entities;
+ 
+ namespace Restaurants.Domain.Repositories
+@@ -10,6 +11,9 @@ namespace Restaurants.Domain.Repositories
+ 
+         Task<Restaurant?> GetById(int id);
+ 
++        Task<(IEnumerable<Restaurant>, int)> GetAllMatching(
++            string? searchPhrase, int pageNumber, int pageSize, string? sortBy, SortDirection sortDirection);
++
+         Task SaveChanges();
+ 
+         Task Delete(Restaurant entity);
+diff --git a/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs b/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
+index 8e1fe89..ed4c6eb 100644
+--- a/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
++++ b/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
+@@ -1,4 +1,6 @@
++using System.Linq.Expressions;
+ using Microsoft.EntityFrameworkCore;
++using Restaurants.Domain.Constants;
+ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Repositories;
+ using Restaurants.Infrastructure.Persistence;
+@@ -24,6 +26,42 @@ public class RestaurantsRepository(RestaurantsDbContext dbContext) : IRestaurant
+         return restaurants;
      }
- }
+ 
++    public async Task<(IEnumerable<Restaurant>, int)> GetAllMatching(
++        string? searchPhrase, int pageNumber, int pageSize, string? sortBy, SortDirection sortDirection)
++    {
++        var searchPhraseLower = searchPhrase?.ToLower();
++
++        var baseQuery = dbContext.Restaurants
++            .Where(r => searchPhraseLower == null ||
++                        r.Name.ToLower().Contains(searchPhraseLower) ||
++                        r.Description.ToLower().Contains(searchPhraseLower));
++
++        var totalCount = await baseQuery.CountAsync();
++
++        if (sortBy != null)
++        {
++            var columnSelector = new Dictionary<string, Expression<Func<Restaurant, object>>>
++            {
++                {nameof(Restaurant.Name), r => r.Name},
++                {nameof(Restaurant.Description), r => r.Description},
++                {nameof(Restaurant.Category), r => r.Category}
++            };
++
++            var selectedColumn = columnSelector[sortBy];
++
++            baseQuery = sortDirection == SortDirection.Ascending
++                ? baseQuery.OrderBy(selectedColumn)
++                : baseQuery.OrderByDescending(selectedColumn);
++        }
++
++        var restaurants = await baseQuery
++            .Skip((pageNumber - 1) * pageSize)
++            .Take(pageSize)
++            .ToListAsync();
++
++        return (restaurants, totalCount);
++    }
++
+     public async Task<Restaurant?> GetById(int id)
+     {
+         var restaurant = await dbContext.Restaurants

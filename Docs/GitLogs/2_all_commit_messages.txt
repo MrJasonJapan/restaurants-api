@@ -1,3 +1,35 @@
+commit 93a6d70b0647cfeb08876ac45db275871ce9b898
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Wed Sep 18 17:39:47 2024 +0900
+
+    Implement CreatedMultipleRestaurantsRequirement for authorization
+    
+    - Add CreatedMultipleRestaurantsRequirement class:
+      - Implement IAuthorizationRequirement interface
+      - Include MinimumRestaurantsCreated property to set the threshold
+    
+    - Create CreatedMultipleRestaurantsRequirementHandler:
+      - Inherit from AuthorizationHandler<CreatedMultipleRestaurantsRequirement>
+      - Inject IRestaurantsRepository and IUserContext for data access
+      - Implement HandleRequirementAsync method to check user's restaurant count
+      - Use context.Succeed() or context.Fail() based on the requirement
+    
+    - Update ServiceCollectionExtensions:
+      - Add CreatedAtLeast2Restaurants policy
+      - Register CreatedMultipleRestaurantsRequirementHandler
+    
+    - Modify RestaurantsController:
+      - Apply [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)] to GetAll action
+      - Remove [AllowAnonymous] attribute
+    
+    - Refine launchSettings.json:
+      - Remove "http" profile to ensure HTTPS is always used
+      - Adjust applicationUrl for consistency
+    
+    This commit introduces a new authorization requirement based on the number of
+    restaurants a user has created, enhancing the application's access control. It
+    also improves error handling for unauthorized access and ensures HTTPS usage.
+
 commit cd71c55bdd1b21c8147434b4040c95dcdb6c1134
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Wed Sep 18 16:58:11 2024 +0900

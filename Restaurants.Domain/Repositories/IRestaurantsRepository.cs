@@ -1,3 +1,4 @@
+using Restaurants.Domain.Constants;
 using Restaurants.Domain.Entities;
 
 namespace Restaurants.Domain.Repositories
@@ -9,6 +10,9 @@ namespace Restaurants.Domain.Repositories
         Task<IEnumerable<Restaurant>> GetAll();
 
         Task<Restaurant?> GetById(int id);
+
+        Task<(IEnumerable<Restaurant>, int)> GetAllMatching(
+            string? searchPhrase, int pageNumber, int pageSize, string? sortBy, SortDirection sortDirection);
 
         Task SaveChanges();
 

@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Restaurants.Domain.Constants;
 using Restaurants.Domain.Entities;
 using Restaurants.Domain.Repositories;
 using Restaurants.Infrastructure.Persistence;
@@ -22,6 +24,42 @@ public class RestaurantsRepository(RestaurantsDbContext dbContext) : IRestaurant
             .ToListAsync();
 
         return restaurants;
+    }
+
+    public async Task<(IEnumerable<Restaurant>, int)> GetAllMatching(
+        string? searchPhrase, int pageNumber, int pageSize, string? sortBy, SortDirection sortDirection)
+    {
+        var searchPhraseLower = searchPhrase?.ToLower();
+
+        var baseQuery = dbContext.Restaurants
+            .Where(r => searchPhraseLower == null ||
+                        r.Name.ToLower().Contains(searchPhraseLower) ||
+                        r.Description.ToLower().Contains(searchPhraseLower));
+
+        var totalCount = await baseQuery.CountAsync();
+
+        if (sortBy != null)
+        {
+            var columnSelector = new Dictionary<string, Expression<Func<Restaurant, object>>>
+            {
+                {nameof(Restaurant.Name), r => r.Name},
+                {nameof(Restaurant.Description), r => r.Description},
+                {nameof(Restaurant.Category), r => r.Category}
+            };
+
+            var selectedColumn = columnSelector[sortBy];
+
+            baseQuery = sortDirection == SortDirection.Ascending
+                ? baseQuery.OrderBy(selectedColumn)
+                : baseQuery.OrderByDescending(selectedColumn);
+        }
+
+        var restaurants = await baseQuery
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (restaurants, totalCount);
     }
 
     public async Task<Restaurant?> GetById(int id)

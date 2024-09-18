@@ -6,7 +6,12 @@ using Restaurants.Domain.Entities;
 using Restaurants.Domain.Exceptions;
 using Restaurants.Domain.Repositories;
 
-namespace Restaurants.Application.Restaurants.Queries.GetRestaurantById;
+namespace Restaurants.Application.Restaurants.Queries;
+
+public class GetRestaurantByIdQuery(int id) : IRequest<RestaurantDto>
+{
+    public int Id { get; set; } = id;
+}
 
 public class GetRestaurantByIdQueryHandler(ILogger<GetRestaurantByIdQueryHandler> logger, IMapper mapper, IRestaurantsRepository restaurantsRepository)
         : IRequestHandler<GetRestaurantByIdQuery, RestaurantDto?>

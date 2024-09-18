@@ -4,7 +4,6 @@ using Restaurants.Application.Commands.UpdateRestaurant;
 using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
 using Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
 using Restaurants.Application.Restaurants.Queries;
-using Restaurants.Application.Restaurants.Queries.GetRestaurantById;
 using Restaurants.Application.Restaurants.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Restaurants.Domain.Constants;
@@ -28,11 +27,11 @@ public class RestaurantsController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet]
-    // [AllowAnonymous]
-    [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
-    public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetAll()
+    [AllowAnonymous]
+    // [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
+    public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetAll([FromQuery] GetAllRestaurantsQuery query)
     {
-        var restaurants = await mediator.Send(new GetAllRestaurantsQuery());
+        var restaurants = await mediator.Send(query);
 
         return Ok(restaurants);
     }

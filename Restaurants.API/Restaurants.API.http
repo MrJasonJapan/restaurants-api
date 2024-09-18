@@ -30,8 +30,13 @@ Authorization: Bearer {{token}}
 }
 
 
-### Get all restaurants
-GET {{Restaurants.API_HostAddress}}/api/restaurants
+### Get all restaurants (with search phrase)
+GET {{Restaurants.API_HostAddress}}/api/restaurants?searchPhrase=hot&pageSize=11113&pageNumber=2
+Authorization: Bearer {{token}}
+
+### Get all restaurants (without search phrase)
+
+GET {{Restaurants.API_HostAddress}}/api/restaurants?pageSize=30&pageNumber=1&sortBy=Description&sortDirection=Ascending
 Authorization: Bearer {{token}}
 
 ### Get a restaurant by id
