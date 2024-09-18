@@ -1,0 +1,395 @@
+diff --git a/Restaurants.API/Middleware/ErrorHandlingMiddleware.cs b/Restaurants.API/Middleware/ErrorHandlingMiddleware.cs
+index 7dda75b..0b07696 100644
+--- a/Restaurants.API/Middleware/ErrorHandlingMiddleware.cs
++++ b/Restaurants.API/Middleware/ErrorHandlingMiddleware.cs
+@@ -18,6 +18,11 @@ public class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> logger) :
+ 
+             logger.LogWarning(notFound.Message);
+         }
++        catch (ForbidException)
++        {
++            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
++            await context.Response.WriteAsync("Access Forbidden");
++        }
+         catch (Exception ex)
+         {
+             logger.LogError(ex, ex.Message);
+diff --git a/Restaurants.API/Program.cs b/Restaurants.API/Program.cs
+index 703f614..4b5171b 100644
+--- a/Restaurants.API/Program.cs
++++ b/Restaurants.API/Program.cs
+@@ -1,4 +1,3 @@
+-using Restaurants.Infrastructure.Extensions;
+ using Restaurants.Infrastructure.Seeders;
+ using Restaurants.Application.Extensions;
+ using Serilog;
+diff --git a/Restaurants.API/Properties/launchSettings.json b/Restaurants.API/Properties/launchSettings.json
+index 45afd10..a600fc1 100644
+--- a/Restaurants.API/Properties/launchSettings.json
++++ b/Restaurants.API/Properties/launchSettings.json
+@@ -24,7 +24,7 @@
+       "dotnetRunMessages": true,
+       "launchBrowser": false,
+       "launchUrl": "weatherforecast",
+-      "applicationUrl": "https://localhost:7186;http://localhost:5236",
++      "applicationUrl": "https://localhost:7186;http://localhost:7185",
+       "environmentVariables": {
+         "ASPNETCORE_ENVIRONMENT": "Development"
+       }
+diff --git a/Restaurants.API/Restaurants.API.http b/Restaurants.API/Restaurants.API.http
+index 28f0a44..9b7adde 100644
+--- a/Restaurants.API/Restaurants.API.http
++++ b/Restaurants.API/Restaurants.API.http
+@@ -1,12 +1,12 @@
+ @Restaurants.API_HostAddress = https://localhost:7186
+-@token = CfDJ8JkfaPYyrzRPuEHO__lupswYnMrtJ_gDs1ov2_t2g8ySvvH6fn7qTB_2EvlZcvmnMwIbPG5iUZagO3mnvkr1URlxz1e9WPKJ2YoV2mGMYnOgLUpZGjcOPjagRVxQPQ4RK45obyoWHTJeE715f5km98xogLVA_f4I0awTQneIb4CKa_2ikPFGdbpVC_7aVQqapRBPwbZ1rjLKCvTAc-8fR_kH7WOXKpyFFSTHgBd20QIEfqjtLxy2HjQTwqY6dxSHQie2QuxwlfZ07-yLiRbC2lfxmEPfdfi8EZV1VNiooQ-ljTkdhSmtdK-Z9Infh7vQY1pSwSqSFkGE7yC7ljt0JOkoI9Wz-FoMLOhvosm2tS6T8aZ0YpFelE_XBrhKYZYqF03eovjSAD03nrk7-o0jub7-FkBibWNHUYD7p9lE25QYwoRW_EA6_wSu6V6jLm4mfLj83G0bR2xoOi-ifCJvwDrGtgcF2jEy4wrAMFeEptTkdIOSdg7VaFfrA9c_ijyuDEhQEQzDEVjeKpym14coxcPezOKlrJdZoPbEq61EASTzMNzww4SIYSpAgO5SGQV_Skdg2m7W-Hhzmm5JFWv4KNXuMAmeKL0sShsZIvYQP47EKJAur_wR7-PUSJPAS6HKevDn39wkMrpcpvfCKmgF8tFgNFvLK6Zy_c0FycSzVro_YlvunHLiZ_7HGymZmSRTJjGuq5kCXcBxizSvAikhoCuon6cskfDoVTZKY3l4pgICNwshhh2Rtfqaas3AEuikNG6VPeQ2Vr_kvKZp_004J3pt-tkjM80WKyGlhY5X0WsQPKKYAr_yK1g9pFMVumkLNxlxhHVff-iSmJX6cnQUrjOgD5ToFX-Ytm5Zklj2gu1k3UYwAxh9Dau3b16QahVA0QUsmqaY9RebBKC0febfGfzHndpgrfEZcsNWpp7CWIIee7WJiH0w6iRw9WVXWEaYc4eXI2uPJr07tnNMTioKoc5nJdb0NabJeCQt-8tYrOZk
++@token = CfDJ8JkfaPYyrzRPuEHO__lupsxYbRSlSONXpqy6uGVqkPYqFMDBP1vnMUNnGNsBn3TK8ET-Z-p9dlm7rSC9U7Yz5JwfxQ4duoq2ue_OKRB-x0zoIpiD6JgHS72xOExVR7p1I4mhPL6IMY3MHda6CMisq3bejUwm2JB7KBdv5GOzT_XZIU9P-BEsxKO4W86hFwqXF23GW2VJq41q8FEu3uTB6TEm0vZ8U4l313s-ESRa_8ugf5dY2XOoHKxI40UPlSqtvtvlI6qit8wCUS52MJ_7zJQEuooqjSkFJ-ik1Rxu04b2H056k2ORWBU7aWvd-ShNDjuNOxaLzj1VMR_QnHXXfZOoxK0vVuGnkp7Arolq9TImDj7EBumqd9IY_UbGZmbFAOR7ZnlYymdNqroWv1c4yKZpGX94DpWkNrYOx83kbYJ2zrNr-8uU3kqDi75BxipiP6Sivvrde89_-U0NzQZyofQ8MqnBLLRxOVn4uGLJYbBEdnYUk2mD7gDzjbgMucJFCv4npJZU8JkgYer9ejDrZSmR1Pbqm6GieKBEIyydYOzOgg089JfY3pYhHXPRMCfzr20vdxsUVyXY06gh2RlYbWoBU7aJiitU5ldZAgucoAyIW4AKmNjTLdgEbEYO17GmIEIa-mfTPMW2_y3t20i6re_7I-aXFH0_VIqaIyg3sXw71v775o-MOUa-fHyjc5KRnw_Ke6jnHM6s3qyRRdg0EWC0GVuB_Kdz0NVuJcckf-aeAgTJM5fwWkf_m13lxFTJo2RajbE3iTyef1fYY4qprb_MU7QHTuF1FsqsvqTovOiDPuYofKk3yDnKPHsn7uYcFcXl0VezF1KeXWLlCNWgqbsRsvRJtIhFr42D6_Cc-jEwEOfxFpZv16YIlCZaoeykWVtqHAwyoUL4aQQ27m7O6yw
+ 
+ ### register new identity user
+ POST {{Restaurants.API_HostAddress}}/api/identity/register
+ Content-Type: application/json
+ 
+ {
+-    "email": "user@test.com",
++    "email": "admin@test.com",
+     "password": "Password1!"
+ }
+ 
+@@ -15,7 +15,7 @@ POST {{Restaurants.API_HostAddress}}/api/identity/login
+ Content-Type: application/json
+ 
+ {
+-    "email": "owner@test.com",
++    "email": "admin@test.com",
+     "password": "Password1!"
+ }
+ 
+@@ -25,8 +25,8 @@ Content-Type: application/json
+ Authorization: Bearer {{token}}
+ 
+ {
+-  "userEmail": "owner@test.com",
+-  "roleName": "Owner"
++  "userEmail": "admin@test.com",
++  "roleName": "Admin"
+ }
+ 
+ 
+@@ -34,7 +34,7 @@ Authorization: Bearer {{token}}
+ GET {{Restaurants.API_HostAddress}}/api/restaurants
+ 
+ ### Get a restaurant by id
+-GET {{Restaurants.API_HostAddress}}/api/restaurants/3
++GET {{Restaurants.API_HostAddress}}/api/restaurants/4
+ Authorization: Bearer {{token}}
+ 
+ ###
+@@ -74,12 +74,13 @@ Content-Type: application/json
+ 
+ ###
+ // update restaurant (not valid)
+-PATCH {{Restaurants.API_HostAddress}}/api/restaurants/5
++PATCH {{Restaurants.API_HostAddress}}/api/restaurants/3
+ Content-Type: application/json
++Authorization: Bearer {{token}}
+ 
+ {
+-    "Name": "12",
+-    "Description": "",
++    "Name": "I was renamed",
++    "Description": "yoyoyo",
+     "HasDelivery": true
+ }
+ 
+@@ -96,7 +97,8 @@ Content-Type: application/json
+ 
+ ###
+ // delete restaurant
+-DELETE {{Restaurants.API_HostAddress}}/api/restaurants/13
++DELETE {{Restaurants.API_HostAddress}}/api/restaurants/4
++Authorization: Bearer {{token}}
+ 
+ ###
+ // add a new dish to a restaurant (invalid)
+diff --git a/Restaurants.API/appsettings.Development.json b/Restaurants.API/appsettings.Development.json
+index 24de3de..2c7d972 100644
+--- a/Restaurants.API/appsettings.Development.json
++++ b/Restaurants.API/appsettings.Development.json
+@@ -4,8 +4,11 @@
+   },
+   "Serilog": {
+     "MinimumLevel": {
++      "Default": "Information",
+       "Override": {
+-        "Microsoft": "Warning",
++        "Microsoft": "Information",
++        "Microsoft.AspNetCore": "Information",
++        "Microsoft.Hosting.Lifetime": "Information",
+         "Microsoft.EntityFrameworkCore": "Information"
+       }
+     },
+diff --git a/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommandHandler.cs b/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommandHandler.cs
+index 1d35994..4c9f087 100644
+--- a/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommandHandler.cs
++++ b/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommandHandler.cs
+@@ -2,12 +2,17 @@ using MediatR;
+ using Microsoft.Extensions.Logging;
+ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Exceptions;
++using Restaurants.Domain.Interfaces;
+ using Restaurants.Domain.Repositories;
++using Restaurants.Domains.Constants;
+ 
+ namespace Restaurants.Application.Dishes.Commands.DeleteDishes;
+ 
+-public class DeleteDishesForRestaurantCommandHandler(ILogger<DeleteDishesForRestaurantCommandHandler> logger, IRestaurantsRepository restaurantsRepository, IDishesRepository dishesRepository)
+- : IRequestHandler<DeleteDishesForRestaurantCommand>
++public class DeleteDishesForRestaurantCommandHandler(ILogger<DeleteDishesForRestaurantCommandHandler> logger,
++    IRestaurantAuthorizationService restaurantAuthorizationService,
++    IRestaurantsRepository restaurantsRepository,
++    IDishesRepository dishesRepository)
++    : IRequestHandler<DeleteDishesForRestaurantCommand>
+ {
+     public async Task Handle(DeleteDishesForRestaurantCommand request, CancellationToken cancellationToken)
+     {
+@@ -15,6 +20,9 @@ public class DeleteDishesForRestaurantCommandHandler(ILogger<DeleteDishesForRest
+ 
+         var restaurant = await restaurantsRepository.GetById(request.RestaurantId) ?? throw new NotFoundException(nameof(Restaurant), request.RestaurantId.ToString());
+ 
+-        await dishesRepository.Delete(restaurant.Dishes);  
++        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Delete))
++            throw new ForbidException();
++
++        await dishesRepository.Delete(restaurant.Dishes);
+     }
+ }
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs
+index 0a472bd..01359e8 100644
+--- a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs
++++ b/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs
+@@ -3,7 +3,10 @@ using MediatR;
+ using Microsoft.Extensions.Logging;
+ using Restaurants.Application.Users;
+ using Restaurants.Domain.Entities;
++using Restaurants.Domain.Exceptions;
++using Restaurants.Domain.Interfaces;
+ using Restaurants.Domain.Repositories;
++using Restaurants.Domains.Constants;
+ 
+ namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
+ 
+@@ -11,6 +14,7 @@ namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
+ public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandler> logger,
+     IMapper mapper,
+     IRestaurantsRepository restaurantsRepository,
++    IRestaurantAuthorizationService restaurantAuthorizationService,
+     IUserContext userContext)
+     : IRequestHandler<CreateRestaurantCommand, int>
+ {
+@@ -26,6 +30,9 @@ public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandl
+         var restaurant = mapper.Map<Restaurant>(request);
+         restaurant.OwnerId = currentUser.Id;
+ 
++        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Create))
++            throw new ForbidException();
++
+         int id = await restaurantsRepository.Create(restaurant);
+ 
+         return id;
+diff --git a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs
+index 80d15b9..0ca7563 100644
+--- a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs
++++ b/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs
+@@ -2,12 +2,15 @@ using MediatR;
+ using Microsoft.Extensions.Logging;
+ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Exceptions;
++using Restaurants.Domain.Interfaces;
+ using Restaurants.Domain.Repositories;
++using Restaurants.Domains.Constants;
+ 
+ namespace Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
+ 
+ public class DeleteRestaurantCommandHandler(ILogger<DeleteRestaurantCommandHandler> logger,
+-    IRestaurantsRepository restaurantsRepository): IRequestHandler<DeleteRestaurantCommand>
++    IRestaurantsRepository restaurantsRepository,
++    IRestaurantAuthorizationService restaurantAuthorizationService): IRequestHandler<DeleteRestaurantCommand>
+ {
+     public async Task Handle(DeleteRestaurantCommand request, CancellationToken cancellationToken)
+     {
+@@ -19,6 +22,9 @@ public class DeleteRestaurantCommandHandler(ILogger<DeleteRestaurantCommandHandl
+         if (restaurant == null)
+             throw new NotFoundException(nameof(Restaurant), request.Id.ToString());
+ 
++        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Delete))
++            throw new ForbidException();
++
+         await restaurantsRepository.Delete(restaurant);
+     }
+ }
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs
+index 3dc68dc..98e85a1 100644
+--- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs
++++ b/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs
+@@ -4,11 +4,14 @@ using Microsoft.Extensions.Logging;
+ using Restaurants.Application.Commands.UpdateRestaurant;
+ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Exceptions;
++using Restaurants.Domain.Interfaces;
+ using Restaurants.Domain.Repositories;
++using Restaurants.Domains.Constants;
+ 
+ namespace Restaurants.Application.Restaurants.Commands.UpdateRestaurant;
+ 
+ public class UpdateRestaurantCommandHandler(ILogger<UpdateRestaurantCommandHandler> logger, IMapper mapper,
++    IRestaurantAuthorizationService restaurantAuthorizationService,
+     IRestaurantsRepository restaurantsRepository) : IRequestHandler<UpdateRestaurantCommand>
+ {
+     public async Task Handle(UpdateRestaurantCommand request, CancellationToken cancellationToken)
+@@ -21,6 +24,9 @@ public class UpdateRestaurantCommandHandler(ILogger<UpdateRestaurantCommandHandl
+         if (restaurant == null)
+             throw new NotFoundException(nameof(Restaurant), request.Id.ToString());
+ 
++        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Update))
++            throw new ForbidException();
++
+         mapper.Map(request, restaurant);
+ 
+         await restaurantsRepository.SaveChanges();
+diff --git a/Restaurants.Domain/Constants/ResourceOperation.cs b/Restaurants.Domain/Constants/ResourceOperation.cs
+new file mode 100644
+index 0000000..0eb01bb
+--- /dev/null
++++ b/Restaurants.Domain/Constants/ResourceOperation.cs
+@@ -0,0 +1,12 @@
++namespace Restaurants.Domains.Constants;
++
++public enum ResourceOperation   
++{
++    Create,
++
++    Read,
++
++    Update,
++    
++    Delete
++}
+\ No newline at end of file
+diff --git a/Restaurants.Domain/Entities/Restaurants.cs b/Restaurants.Domain/Entities/Restaurants.cs
+index 771412d..aa08644 100644
+--- a/Restaurants.Domain/Entities/Restaurants.cs
++++ b/Restaurants.Domain/Entities/Restaurants.cs
+@@ -20,6 +20,8 @@ public class Restaurant
+ 
+     public List<Dish> Dishes { get; set; } = new();
+ 
++
++    /// Relationships & Navigation Properties
+     public User Owner { get; set; } = default!;
+ 
+     public string OwnerId { get; set; } = default!;
+diff --git a/Restaurants.Domain/Exceptions/ForbidException.cs b/Restaurants.Domain/Exceptions/ForbidException.cs
+new file mode 100644
+index 0000000..90d7b4b
+--- /dev/null
++++ b/Restaurants.Domain/Exceptions/ForbidException.cs
+@@ -0,0 +1,6 @@
++namespace Restaurants.Domain.Exceptions;
++
++public class ForbidException : Exception
++{
++    
++}
+\ No newline at end of file
+diff --git a/Restaurants.Domain/Interfaces/IRestaurantAuthorizationService.cs b/Restaurants.Domain/Interfaces/IRestaurantAuthorizationService.cs
+new file mode 100644
+index 0000000..8120e05
+--- /dev/null
++++ b/Restaurants.Domain/Interfaces/IRestaurantAuthorizationService.cs
+@@ -0,0 +1,9 @@
++using Restaurants.Domain.Entities;
++using Restaurants.Domains.Constants;
++
++namespace Restaurants.Domain.Interfaces;
++
++public interface IRestaurantAuthorizationService
++{
++    bool Authorize(Restaurant restaurant, ResourceOperation resourceOperation);
++}
+\ No newline at end of file
+diff --git a/Restaurants.Infrastructure/Authorization/Services/RestaurantAuthorizationService.cs b/Restaurants.Infrastructure/Authorization/Services/RestaurantAuthorizationService.cs
+new file mode 100644
+index 0000000..aa91792
+--- /dev/null
++++ b/Restaurants.Infrastructure/Authorization/Services/RestaurantAuthorizationService.cs
+@@ -0,0 +1,43 @@
++using Microsoft.Extensions.Logging;
++using Restaurants.Application.Users;
++using Restaurants.Domain.Constants;
++using Restaurants.Domain.Entities;
++using Restaurants.Domain.Interfaces;
++using Restaurants.Domains.Constants;
++
++namespace Restaurants.Infrastructure.Authorization.Services;
++
++public class RestaurantAuthorizationService(ILogger<RestaurantAuthorizationService> logger,
++    IUserContext userContext) : IRestaurantAuthorizationService
++{
++    public bool Authorize(Restaurant restaurant, ResourceOperation resourceOperation)
++    {
++        var user = userContext.GetCurrentUser();
++
++        logger.LogInformation("Authorizing user {UserEmail} for operation {Operation} on restaurant {RestaurantName}",        
++            user.Email, resourceOperation, restaurant.Name);
++
++        if(resourceOperation == ResourceOperation.Read || resourceOperation == ResourceOperation.Create)
++        {
++            logger.LogInformation("Create/Read operation - successful authorization");
++            return true;
++        }
++
++        // delete
++        if(resourceOperation == ResourceOperation.Delete && user.IsInRole(UserRoles.Admin))
++        {
++            logger.LogInformation("Admin User, Delete operation - successful authorization");
++            return true;
++        }
++
++        // delete or update
++        if((resourceOperation == ResourceOperation.Delete || resourceOperation == ResourceOperation.Update)
++            && user.Id == restaurant.OwnerId)
++        {
++            logger.LogInformation("Restaurant Owner, Delete/Update operation - successful authorization");
++            return true;
++        }
++
++        return false;
++    }
++}
+\ No newline at end of file
+diff --git a/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs b/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
+index c56b9bd..5fb4c08 100644
+--- a/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
++++ b/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
+@@ -11,8 +11,8 @@ using Restaurants.Infrastructure.Authorization.Requirements;
+ using Restaurants.Infrastructure.Persistence;
+ using Restaurants.Infrastructure.Repositories;
+ using Restaurants.Infrastructure.Seeders;
+-
+-namespace Restaurants.Infrastructure.Extensions;
++using Restaurants.Domain.Interfaces;
++using Restaurants.Infrastructure.Authorization.Services;
+ 
+ public static class ServiceCollectionExtensions
+ {
+@@ -42,6 +42,8 @@ public static class ServiceCollectionExtensions
+                 policy => policy.AddRequirements(new MinimumAgeRequirement(20)));
+ 
+         services.AddScoped<IAuthorizationHandler, MinimumAgeRequirementHandler>();
++
++        services.AddScoped<IRestaurantAuthorizationService, RestaurantAuthorizationService>();
+     }
+ }
+ 

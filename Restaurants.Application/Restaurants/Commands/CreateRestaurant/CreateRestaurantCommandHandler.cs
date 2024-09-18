@@ -3,7 +3,10 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Restaurants.Application.Users;
 using Restaurants.Domain.Entities;
+using Restaurants.Domain.Exceptions;
+using Restaurants.Domain.Interfaces;
 using Restaurants.Domain.Repositories;
+using Restaurants.Domains.Constants;
 
 namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
 
@@ -11,6 +14,7 @@ namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
 public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandler> logger,
     IMapper mapper,
     IRestaurantsRepository restaurantsRepository,
+    IRestaurantAuthorizationService restaurantAuthorizationService,
     IUserContext userContext)
     : IRequestHandler<CreateRestaurantCommand, int>
 {
@@ -25,6 +29,9 @@ public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandl
 
         var restaurant = mapper.Map<Restaurant>(request);
         restaurant.OwnerId = currentUser.Id;
+
+        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Create))
+            throw new ForbidException();
 
         int id = await restaurantsRepository.Create(restaurant);
 

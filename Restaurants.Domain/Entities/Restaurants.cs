@@ -20,6 +20,8 @@ public class Restaurant
 
     public List<Dish> Dishes { get; set; } = new();
 
+
+    /// Relationships & Navigation Properties
     public User Owner { get; set; } = default!;
 
     public string OwnerId { get; set; } = default!;

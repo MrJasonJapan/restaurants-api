@@ -1,12 +1,12 @@
 @Restaurants.API_HostAddress = https://localhost:7186
-@token = CfDJ8JkfaPYyrzRPuEHO__lupswYnMrtJ_gDs1ov2_t2g8ySvvH6fn7qTB_2EvlZcvmnMwIbPG5iUZagO3mnvkr1URlxz1e9WPKJ2YoV2mGMYnOgLUpZGjcOPjagRVxQPQ4RK45obyoWHTJeE715f5km98xogLVA_f4I0awTQneIb4CKa_2ikPFGdbpVC_7aVQqapRBPwbZ1rjLKCvTAc-8fR_kH7WOXKpyFFSTHgBd20QIEfqjtLxy2HjQTwqY6dxSHQie2QuxwlfZ07-yLiRbC2lfxmEPfdfi8EZV1VNiooQ-ljTkdhSmtdK-Z9Infh7vQY1pSwSqSFkGE7yC7ljt0JOkoI9Wz-FoMLOhvosm2tS6T8aZ0YpFelE_XBrhKYZYqF03eovjSAD03nrk7-o0jub7-FkBibWNHUYD7p9lE25QYwoRW_EA6_wSu6V6jLm4mfLj83G0bR2xoOi-ifCJvwDrGtgcF2jEy4wrAMFeEptTkdIOSdg7VaFfrA9c_ijyuDEhQEQzDEVjeKpym14coxcPezOKlrJdZoPbEq61EASTzMNzww4SIYSpAgO5SGQV_Skdg2m7W-Hhzmm5JFWv4KNXuMAmeKL0sShsZIvYQP47EKJAur_wR7-PUSJPAS6HKevDn39wkMrpcpvfCKmgF8tFgNFvLK6Zy_c0FycSzVro_YlvunHLiZ_7HGymZmSRTJjGuq5kCXcBxizSvAikhoCuon6cskfDoVTZKY3l4pgICNwshhh2Rtfqaas3AEuikNG6VPeQ2Vr_kvKZp_004J3pt-tkjM80WKyGlhY5X0WsQPKKYAr_yK1g9pFMVumkLNxlxhHVff-iSmJX6cnQUrjOgD5ToFX-Ytm5Zklj2gu1k3UYwAxh9Dau3b16QahVA0QUsmqaY9RebBKC0febfGfzHndpgrfEZcsNWpp7CWIIee7WJiH0w6iRw9WVXWEaYc4eXI2uPJr07tnNMTioKoc5nJdb0NabJeCQt-8tYrOZk
+@token = CfDJ8JkfaPYyrzRPuEHO__lupsxYbRSlSONXpqy6uGVqkPYqFMDBP1vnMUNnGNsBn3TK8ET-Z-p9dlm7rSC9U7Yz5JwfxQ4duoq2ue_OKRB-x0zoIpiD6JgHS72xOExVR7p1I4mhPL6IMY3MHda6CMisq3bejUwm2JB7KBdv5GOzT_XZIU9P-BEsxKO4W86hFwqXF23GW2VJq41q8FEu3uTB6TEm0vZ8U4l313s-ESRa_8ugf5dY2XOoHKxI40UPlSqtvtvlI6qit8wCUS52MJ_7zJQEuooqjSkFJ-ik1Rxu04b2H056k2ORWBU7aWvd-ShNDjuNOxaLzj1VMR_QnHXXfZOoxK0vVuGnkp7Arolq9TImDj7EBumqd9IY_UbGZmbFAOR7ZnlYymdNqroWv1c4yKZpGX94DpWkNrYOx83kbYJ2zrNr-8uU3kqDi75BxipiP6Sivvrde89_-U0NzQZyofQ8MqnBLLRxOVn4uGLJYbBEdnYUk2mD7gDzjbgMucJFCv4npJZU8JkgYer9ejDrZSmR1Pbqm6GieKBEIyydYOzOgg089JfY3pYhHXPRMCfzr20vdxsUVyXY06gh2RlYbWoBU7aJiitU5ldZAgucoAyIW4AKmNjTLdgEbEYO17GmIEIa-mfTPMW2_y3t20i6re_7I-aXFH0_VIqaIyg3sXw71v775o-MOUa-fHyjc5KRnw_Ke6jnHM6s3qyRRdg0EWC0GVuB_Kdz0NVuJcckf-aeAgTJM5fwWkf_m13lxFTJo2RajbE3iTyef1fYY4qprb_MU7QHTuF1FsqsvqTovOiDPuYofKk3yDnKPHsn7uYcFcXl0VezF1KeXWLlCNWgqbsRsvRJtIhFr42D6_Cc-jEwEOfxFpZv16YIlCZaoeykWVtqHAwyoUL4aQQ27m7O6yw
 
 ### register new identity user
 POST {{Restaurants.API_HostAddress}}/api/identity/register
 Content-Type: application/json
 
 {
-    "email": "user@test.com",
+    "email": "admin@test.com",
     "password": "Password1!"
 }
 
@@ -15,7 +15,7 @@ POST {{Restaurants.API_HostAddress}}/api/identity/login
 Content-Type: application/json
 
 {
-    "email": "owner@test.com",
+    "email": "admin@test.com",
     "password": "Password1!"
 }
 
@@ -25,8 +25,8 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "userEmail": "owner@test.com",
-  "roleName": "Owner"
+  "userEmail": "admin@test.com",
+  "roleName": "Admin"
 }
 
 
@@ -34,7 +34,7 @@ Authorization: Bearer {{token}}
 GET {{Restaurants.API_HostAddress}}/api/restaurants
 
 ### Get a restaurant by id
-GET {{Restaurants.API_HostAddress}}/api/restaurants/3
+GET {{Restaurants.API_HostAddress}}/api/restaurants/4
 Authorization: Bearer {{token}}
 
 ###
@@ -74,12 +74,13 @@ Content-Type: application/json
 
 ###
 // update restaurant (not valid)
-PATCH {{Restaurants.API_HostAddress}}/api/restaurants/5
+PATCH {{Restaurants.API_HostAddress}}/api/restaurants/3
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
-    "Name": "12",
-    "Description": "",
+    "Name": "I was renamed",
+    "Description": "yoyoyo",
     "HasDelivery": true
 }
 
@@ -96,7 +97,8 @@ Content-Type: application/json
 
 ###
 // delete restaurant
-DELETE {{Restaurants.API_HostAddress}}/api/restaurants/13
+DELETE {{Restaurants.API_HostAddress}}/api/restaurants/4
+Authorization: Bearer {{token}}
 
 ###
 // add a new dish to a restaurant (invalid)

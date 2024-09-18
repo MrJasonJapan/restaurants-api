@@ -11,8 +11,8 @@ using Restaurants.Infrastructure.Authorization.Requirements;
 using Restaurants.Infrastructure.Persistence;
 using Restaurants.Infrastructure.Repositories;
 using Restaurants.Infrastructure.Seeders;
-
-namespace Restaurants.Infrastructure.Extensions;
+using Restaurants.Domain.Interfaces;
+using Restaurants.Infrastructure.Authorization.Services;
 
 public static class ServiceCollectionExtensions
 {
@@ -42,6 +42,8 @@ public static class ServiceCollectionExtensions
                 policy => policy.AddRequirements(new MinimumAgeRequirement(20)));
 
         services.AddScoped<IAuthorizationHandler, MinimumAgeRequirementHandler>();
+
+        services.AddScoped<IRestaurantAuthorizationService, RestaurantAuthorizationService>();
     }
 }
 
