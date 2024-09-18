@@ -1,3 +1,40 @@
+commit cd71c55bdd1b21c8147434b4040c95dcdb6c1134
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Wed Sep 18 16:58:11 2024 +0900
+
+    Implement restaurant authorization and enhance error handling
+    
+    - Add RestaurantAuthorizationService for fine-grained access control
+      - Implement IRestaurantAuthorizationService interface
+      - Add authorization checks based on user roles and restaurant ownership
+      - Integrate with existing user context
+    
+    - Update command handlers to use RestaurantAuthorizationService
+      - Modify CreateRestaurantCommandHandler
+      - Update DeleteRestaurantCommandHandler
+      - Enhance UpdateRestaurantCommandHandler
+      - Refactor DeleteDishesForRestaurantCommandHandler
+    
+    - Introduce new domain concepts
+      - Add ResourceOperation enum for CRUD operations
+      - Create ForbidException for unauthorized access attempts
+    
+    - Enhance ErrorHandlingMiddleware
+      - Add specific handling for ForbidException
+      - Return 403 Forbidden status code for unauthorized access
+    
+    - Refine logging configuration in appsettings.Development.json
+      - Adjust log levels for Microsoft namespaces
+    
+    - Minor updates
+      - Adjust HTTP port in launchSettings.json
+      - Add comment for relationships in Restaurant entity
+    
+    This commit introduces a robust authorization system for restaurant-related
+    operations, improves error handling, and refines the overall structure of
+    the application. It ensures that only authorized users can perform specific
+    actions on restaurants based on their roles and ownership.
+
 commit 2e80849d8cfaddd8457633bbba1afe174f716759
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Thu Jul 11 20:04:45 2024 +0900

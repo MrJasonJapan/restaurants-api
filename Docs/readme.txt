@@ -15,8 +15,6 @@ https://localhost:7186/swagger/index.html
 
 
 ・Git Logs (From Restaurants.API Folder)
-git diff --cached -- . ':(exclude)Docs/*' > ../Docs/GitLogs/1_current_changes.txt
-    * [git diff --cached]: Shows the differences between the staged changes and the last commit (what will be committed next).
 git diff --staged ':(exclude)Docs/*' > ../Docs/GitLogs/1_current_changes.txt
 git log > ../Docs/GitLogs/2_all_commit_messages.txt
     
