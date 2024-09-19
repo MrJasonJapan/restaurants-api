@@ -1,3 +1,40 @@
+commit 2abd22bdb31334565e1105299bc02d93b2bad83b
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Wed Sep 18 21:22:51 2024 +0900
+
+    Implement pagination and search for GetAllRestaurants query
+    
+    - Update GetAllRestaurantsQuery:
+      - Add properties for SearchPhrase, PageNumber, PageSize, SortBy, and SortDirection
+      - Implement IRequest<PagedResult<RestaurantDto>> interface
+    
+    - Create GetAllRestaurantsQueryValidator:
+      - Add validation rules for PageNumber, PageSize, and SortBy
+      - Ensure PageSize is within allowed values
+      - Validate SortBy against allowed column names
+    
+    - Refactor GetAllRestaurantsQueryHandler:
+      - Modify Handle method to use new query parameters
+      - Implement pagination, searching, and sorting logic
+      - Return PagedResult<RestaurantDto> instead of IEnumerable<RestaurantDto>
+    
+    - Add PagedResult<T> class in Application layer:
+      - Implement properties for Items, TotalPages, ItemsFrom, ItemsTo, and TotalItems
+      - Calculate pagination details in the constructor
+    
+    - Update IRestaurantsRepository and RestaurantsRepository:
+      - Add GetAllMatching method to support pagination, searching, and sorting
+      - Implement LINQ query with dynamic sorting and filtering
+    
+    - Modify RestaurantsController:
+      - Update GetAll action to accept GetAllRestaurantsQuery as a parameter
+      - Remove [Authorize] attribute and add [AllowAnonymous]
+    
+    - Update Restaurants.API.http:
+      - Add test cases for paginated and sorted restaurant queries
+    
+    This commit introduces pagination, searching, and sorting capabilities to the GetAllRestaurants endpoint, improving performance and flexibility for large datasets. It also includes proper validation for query parameters and updates the API documentation.
+
 commit 93a6d70b0647cfeb08876ac45db275871ce9b898
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Wed Sep 18 17:39:47 2024 +0900

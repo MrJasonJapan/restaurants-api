@@ -1,365 +1,198 @@
-diff --git a/Docs/restaurant_dummy_insert_script.sql b/Docs/restaurant_dummy_insert_script.sql
+diff --git a/Restaurants.API/Restaurants.API.sln b/Restaurants.API/Restaurants.API.sln
+index df19601..349c078 100644
+--- a/Restaurants.API/Restaurants.API.sln
++++ b/Restaurants.API/Restaurants.API.sln
+@@ -1,14 +1,17 @@
++﻿
+ Microsoft Visual Studio Solution File, Format Version 12.00
+ # Visual Studio Version 17
+ VisualStudioVersion = 17.0.31903.59
+ MinimumVisualStudioVersion = 10.0.40219.1
+ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.API", "Restaurants.API.csproj", "{F35ABE87-FA59-4A1B-A03B-864654BE9559}"
+ EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Domain", "..\Restaurants.Domain\Restaurants.Domain.csproj", "{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}"
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Domain", "..\Restaurants.Domain\Restaurants.Domain.csproj", "{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}"
+ EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Application", "..\Restaurants.Application\Restaurants.Application.csproj", "{6174B870-2C87-4A82-8C3A-25F86BB41434}"
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application", "..\Restaurants.Application\Restaurants.Application.csproj", "{6174B870-2C87-4A82-8C3A-25F86BB41434}"
+ EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Infrastructure", "..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj", "{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}"
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Infrastructure", "..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj", "{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}"
++EndProject
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Application.Tests", "..\Restaurants.Application.Tests\Restaurants.Application.Tests.csproj", "{A12771FD-9E18-46B3-81E3-7966F12E6BD8}"
+ EndProject
+ Global
+ 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+@@ -32,6 +35,10 @@ Global
+ 		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Debug|Any CPU.Build.0 = Debug|Any CPU
+ 		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Release|Any CPU.ActiveCfg = Release|Any CPU
+ 		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Release|Any CPU.Build.0 = Release|Any CPU
++		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Release|Any CPU.Build.0 = Release|Any CPU
+ 	EndGlobalSection
+ 	GlobalSection(SolutionProperties) = preSolution
+ 		HideSolutionNode = FALSE
+diff --git a/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj b/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
 new file mode 100644
-index 0000000..0529bff
+index 0000000..887c43f
 --- /dev/null
-+++ b/Docs/restaurant_dummy_insert_script.sql
-@@ -0,0 +1,38 @@
-+DECLARE @counter INT = 1;
-+DECLARE @maxRecords INT = 5000;
-+DECLARE @OwnerId NVARCHAR(450) = '731bbb9c-0871-44df-ba30-eab9df9e11cc';
++++ b/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
+@@ -0,0 +1,31 @@
++<Project Sdk="Microsoft.NET.Sdk">
 +
-+WHILE @counter <= @maxRecords
-+BEGIN
-+    INSERT INTO [dbo].[Restaurants]
-+    (
-+        [Name],
-+        [Description],
-+        [Category],
-+        [HasDelivery],
-+        [ContactEmail],
-+        [ContactNumber],
-+        [Address_City],
-+        [Address_Street],
-+        [Address_PostalCode],
-+        [OwnerId]
-+    )
-+    VALUES
-+    (
-+        'Restaurant ' + CAST(@counter AS NVARCHAR(10)),          -- Name
-+        'Delicious food number ' + CAST(@counter AS NVARCHAR(10)),  -- Description
-+        CASE WHEN @counter % 3 = 0 THEN 'Japanese'               -- Category
-+             WHEN @counter % 3 = 1 THEN 'Italian'
-+             ELSE 'Mexican' 
-+        END,
-+        CASE WHEN @counter % 2 = 0 THEN 1 ELSE 0 END,            -- HasDelivery (randomly assigns true/false)
-+        'email' + CAST(@counter AS NVARCHAR(10)) + '@dummy.com',  -- ContactEmail
-+        '123456' + RIGHT('000' + CAST(@counter AS NVARCHAR(10)), 4),  -- ContactNumber
-+        'City ' + CAST(@counter AS NVARCHAR(10)),                 -- Address_City
-+        'Street ' + CAST(@counter AS NVARCHAR(10)),               -- Address_Street
-+        'PostalCode ' + CAST(@counter AS NVARCHAR(10)),           -- Address_PostalCode
-+        @OwnerId                                                  -- OwnerId (fixed value)
-+    );
++  <PropertyGroup>
++    <TargetFramework>net8.0</TargetFramework>
++    <ImplicitUsings>enable</ImplicitUsings>
++    <Nullable>enable</Nullable>
 +
-+    SET @counter = @counter + 1;
-+END;
-diff --git a/Restaurants.API/Controllers/RestaurantsController.cs b/Restaurants.API/Controllers/RestaurantsController.cs
-index c2f4ed5..9d8a7d7 100644
---- a/Restaurants.API/Controllers/RestaurantsController.cs
-+++ b/Restaurants.API/Controllers/RestaurantsController.cs
-@@ -4,7 +4,6 @@ using Restaurants.Application.Commands.UpdateRestaurant;
- using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
- using Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
- using Restaurants.Application.Restaurants.Queries;
--using Restaurants.Application.Restaurants.Queries.GetRestaurantById;
- using Restaurants.Application.Restaurants.Dtos;
- using Microsoft.AspNetCore.Authorization;
- using Restaurants.Domain.Constants;
-@@ -28,11 +27,11 @@ public class RestaurantsController(IMediator mediator) : ControllerBase
-     }
- 
-     [HttpGet]
--    // [AllowAnonymous]
--    [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
--    public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetAll()
-+    [AllowAnonymous]
-+    // [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
-+    public async Task<ActionResult<IEnumerable<RestaurantDto>>> GetAll([FromQuery] GetAllRestaurantsQuery query)
-     {
--        var restaurants = await mediator.Send(new GetAllRestaurantsQuery());
-+        var restaurants = await mediator.Send(query);
- 
-         return Ok(restaurants);
-     }
-diff --git a/Restaurants.API/Restaurants.API.http b/Restaurants.API/Restaurants.API.http
-index 1e6d37d..482a3b9 100644
---- a/Restaurants.API/Restaurants.API.http
-+++ b/Restaurants.API/Restaurants.API.http
-@@ -30,8 +30,13 @@ Authorization: Bearer {{token}}
- }
- 
- 
--### Get all restaurants
--GET {{Restaurants.API_HostAddress}}/api/restaurants
-+### Get all restaurants (with search phrase)
-+GET {{Restaurants.API_HostAddress}}/api/restaurants?searchPhrase=hot&pageSize=11113&pageNumber=2
-+Authorization: Bearer {{token}}
++    <IsPackable>false</IsPackable>
++    <IsTestProject>true</IsTestProject>
++  </PropertyGroup>
 +
-+### Get all restaurants (without search phrase)
++  <ItemGroup>
++    <PackageReference Include="coverlet.collector" Version="6.0.0" />
++    <PackageReference Include="FluentAssertions" Version="6.12.1" />
++    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
++    <PackageReference Include="Moq" Version="4.20.72" />
++    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
++    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
++    <PackageReference Include="xunit" Version="2.6.6" />
++    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7" />
++  </ItemGroup>
 +
-+GET {{Restaurants.API_HostAddress}}/api/restaurants?pageSize=30&pageNumber=1&sortBy=Description&sortDirection=Ascending
- Authorization: Bearer {{token}}
- 
- ### Get a restaurant by id
-diff --git a/Restaurants.Application/Common/PagedResult.cs b/Restaurants.Application/Common/PagedResult.cs
++  <ItemGroup>
++    <ProjectReference Include="..\Restaurants.Application\Restaurants.Application.csproj" />
++  </ItemGroup>
++
++  <ItemGroup>
++    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
++  </ItemGroup>
++
++</Project>
+diff --git a/Restaurants.Application.Tests/Users/CurrentUserTests.cs b/Restaurants.Application.Tests/Users/CurrentUserTests.cs
 new file mode 100644
-index 0000000..f3e48cb
+index 0000000..205c0d5
 --- /dev/null
-+++ b/Restaurants.Application/Common/PagedResult.cs
-@@ -0,0 +1,19 @@
-+namespace Restaurants.Application.Common;
-+
-+public class PagedResult<T>
-+{
-+    public PagedResult(IEnumerable<T> items, int totalItems, int pageSize, int pageNumber)
-+    {
-+        Items = items;
-+        TotalItems = totalItems;
-+        TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-+        ItemsFrom = pageSize * (pageNumber - 1) + 1;
-+        ItemsTo = ItemsFrom + pageSize - 1;
-+    }
-+
-+    public IEnumerable<T> Items { get; set; }
-+    public int TotalPages { get; set; }
-+    public int ItemsFrom { get; set; }
-+    public int ItemsTo { get; set; }
-+    public int TotalItems { get; set; }
-+}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQuery.cs b/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQuery.cs
-deleted file mode 100644
-index 94ad50e..0000000
---- a/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQuery.cs
-+++ /dev/null
-@@ -1,9 +0,0 @@
--using MediatR;
--using Restaurants.Application.Restaurants.Dtos;
--
--namespace Restaurants.Application.Restaurants.Queries;
--
--public class GetAllRestaurantsQuery : IRequest<IEnumerable<RestaurantDto>>
--{
--
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQueryHandler.cs b/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQueryHandler.cs
-deleted file mode 100644
-index a7ceee6..0000000
---- a/Restaurants.Application/Restaurants/Queries/GetAllRestaurants/GetAllRestaurantsQueryHandler.cs
-+++ /dev/null
-@@ -1,24 +0,0 @@
--using AutoMapper;
--using MediatR;
--using Microsoft.Extensions.Logging;
--using Restaurants.Application.Restaurants.Dtos;
--using Restaurants.Domain.Repositories;
--
--namespace Restaurants.Application.Restaurants.Queries.GetAllRestaurants;
--
--public class GetAllRestaurantsQueryHandler(
--    ILogger<GetAllRestaurantsQueryHandler> logger,
--    IMapper mapper,
--    IRestaurantsRepository restaurantsRepository)
--    : IRequestHandler<GetAllRestaurantsQuery, IEnumerable<RestaurantDto>>
--{
--    public async Task<IEnumerable<RestaurantDto>> Handle(GetAllRestaurantsQuery request, CancellationToken cancellationToken)
--    {
--        logger.LogInformation("Getting all restaurants");
--
--        var restaurants = await restaurantsRepository.GetAll();
--        var restaurantDtos = mapper.Map<IEnumerable<RestaurantDto>>(restaurants);
--
--        return restaurantDtos!;
--    }
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs b/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs
-new file mode 100644
-index 0000000..b279633
---- /dev/null
-+++ b/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs
-@@ -0,0 +1,69 @@
-+using AutoMapper;
-+using FluentValidation;
-+using MediatR;
-+using Microsoft.Extensions.Logging;
-+using Restaurants.Application.Common;
-+using Restaurants.Application.Restaurants.Dtos;
++++ b/Restaurants.Application.Tests/Users/CurrentUserTests.cs
+@@ -0,0 +1,50 @@
++﻿using FluentAssertions;
 +using Restaurants.Domain.Constants;
-+using Restaurants.Domain.Entities;
-+using Restaurants.Domain.Repositories;
++using Xunit;
 +
-+namespace Restaurants.Application.Restaurants.Queries;
++namespace restaurants_api.Application.Users.Tests;
 +
-+public class GetAllRestaurantsQuery : IRequest<PagedResult<RestaurantDto>>
++public class CurrentUserTests
 +{
-+    public string? SearchPhrase { get; set; }
-+    public int PageNumber { get; set; }
-+    public int PageSize { get; set; }
-+    public string? SortBy { get; set; }
-+    public SortDirection SortDirection { get; set; }
-+}
-+
-+public class GetAllRestaurantsQueryValidator : AbstractValidator<GetAllRestaurantsQuery>
-+{
-+    private int[] allowedPageSizes = new[] { 5, 10, 15, 30 };
-+    private string[] allowedSortByColumnNames = [ 
-+        nameof(Restaurant.Name),
-+        nameof(Restaurant.Description),
-+        nameof(Restaurant.Category)
-+    ];
-+
-+    public GetAllRestaurantsQueryValidator()
++    // Naming Convention: TestMethodName_Scenario_ExpectedResult
++    [Theory] // theory allows us to run the same test with multiple inputs
++    [InlineData(UserRoles.Admin)]
++    [InlineData(UserRoles.User)]
++    public void IsInRole_WithMatchingRole_ShouldReturnTrue(string roleName)
 +    {
-+        RuleFor(r => r.PageNumber).GreaterThanOrEqualTo(1);
++        // arrange
++        var currentUser = new CurrentUser(Guid.NewGuid().ToString(), "test@example.com", [UserRoles.Admin, UserRoles.User], null, null);
 +
-+        RuleFor(r => r.PageSize)
-+            .Must(value => allowedPageSizes.Contains(value))
-+            .WithMessage($"PageSize must be in [{string.Join(", ", allowedPageSizes)}]");   
++        // act
++        var isInRole = currentUser.IsInRole(roleName);
 +
-+        RuleFor(r => r.SortBy)
-+            .Must(value => allowedSortByColumnNames.Contains(value))
-+            .When(q => q.SortBy != null)
-+            .WithMessage($"SortBy is optional, or must be in [{string.Join(", ", allowedSortByColumnNames)}]");
++        // assert
++        isInRole.Should().BeTrue();
 +    }
-+}
 +
-+public class GetAllRestaurantsQueryHandler(
-+    ILogger<GetAllRestaurantsQueryHandler> logger,
-+    IMapper mapper,
-+    IRestaurantsRepository restaurantsRepository)
-+    : IRequestHandler<GetAllRestaurantsQuery, PagedResult<RestaurantDto>>
-+{
-+    public async Task<PagedResult<RestaurantDto>> Handle(GetAllRestaurantsQuery request, CancellationToken cancellationToken)
++    [Fact()] // fact is for a single input test
++    public void IsInRole_WithNoMatchingRole_ShouldReturnFalse()
 +    {
-+        logger.LogInformation("Getting all restaurants");
++        // arrange
++        var currentUser = new CurrentUser(Guid.NewGuid().ToString(), "test@example.com", [UserRoles.Admin, UserRoles.User], null, null);
 +
-+        var (restaurants, totalItems) = await restaurantsRepository.GetAllMatching(
-+            request.SearchPhrase,
-+            request.PageNumber,
-+            request.PageSize,
-+            request.SortBy,
-+            request.SortDirection);
++        // act
++        var isInRole = currentUser.IsInRole(UserRoles.Owner);
 +
-+        var restaurantDtos = mapper.Map<IEnumerable<RestaurantDto>>(restaurants);
++        // assert
++        isInRole.Should().BeFalse();
++    }
 +
-+        var result = new PagedResult<RestaurantDto>(restaurantDtos, totalItems, request.PageSize, request.PageNumber);
++    [Fact()]
++    public void IsInRole_WithNoMatchingRoleBecauseOfIncorrectCasing_ShouldReturnFalse()
++    {
++        // arrange
++        var currentUser = new CurrentUser(Guid.NewGuid().ToString(), "test@example.com", [UserRoles.Admin, UserRoles.User], null, null);
 +
-+        return result;
++        // act
++        var isInRole = currentUser.IsInRole(UserRoles.Admin.ToLower()); // ※ IsInRole should be case-sensitive
++
++        // assert
++        isInRole.Should().BeFalse();
 +    }
 +}
 \ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQuery.cs b/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQuery.cs
-deleted file mode 100644
-index 27a87b7..0000000
---- a/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQuery.cs
-+++ /dev/null
-@@ -1,9 +0,0 @@
--using MediatR;
--using Restaurants.Application.Restaurants.Dtos;
--
--namespace Restaurants.Application.Restaurants.Queries.GetRestaurantById;
--
--public class GetRestaurantByIdQuery(int id) : IRequest<RestaurantDto>
--{
--    public int Id { get; set; } = id;
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQueryHandler.cs b/Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
-similarity index 84%
-rename from Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQueryHandler.cs
-rename to Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
-index b5b791a..9ad47b0 100644
---- a/Restaurants.Application/Restaurants/Queries/GetRestaurantById/GetRestaurantByIdQueryHandler.cs
-+++ b/Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
-@@ -6,7 +6,12 @@ using Restaurants.Domain.Entities;
- using Restaurants.Domain.Exceptions;
- using Restaurants.Domain.Repositories;
- 
--namespace Restaurants.Application.Restaurants.Queries.GetRestaurantById;
-+namespace Restaurants.Application.Restaurants.Queries;
-+
-+public class GetRestaurantByIdQuery(int id) : IRequest<RestaurantDto>
-+{
-+    public int Id { get; set; } = id;
-+}
- 
- public class GetRestaurantByIdQueryHandler(ILogger<GetRestaurantByIdQueryHandler> logger, IMapper mapper, IRestaurantsRepository restaurantsRepository)
-         : IRequestHandler<GetRestaurantByIdQuery, RestaurantDto?>
-diff --git a/Restaurants.Domain/Constants/SortDirection.cs b/Restaurants.Domain/Constants/SortDirection.cs
+diff --git a/Restaurants.Application.Tests/Users/UserContextTests.cs b/Restaurants.Application.Tests/Users/UserContextTests.cs
 new file mode 100644
-index 0000000..92723f7
+index 0000000..d5cd833
 --- /dev/null
-+++ b/Restaurants.Domain/Constants/SortDirection.cs
-@@ -0,0 +1,7 @@
-+namespace Restaurants.Domain.Constants;
++++ b/Restaurants.Application.Tests/Users/UserContextTests.cs
+@@ -0,0 +1,62 @@
++using System.Security.Claims;
++using FluentAssertions;
++using Microsoft.AspNetCore.Http;
++using Moq;
++using Restaurants.Application.Users;
++using Restaurants.Domain.Constants;
++using Xunit;
 +
-+public enum SortDirection
++namespace Restaurants.Application.Tests.Users;
++
++public class UserContextTests
 +{
-+    Ascending,
-+    Descending
-+}
-\ No newline at end of file
-diff --git a/Restaurants.Domain/Repositories/IRestaurantsRepository.cs b/Restaurants.Domain/Repositories/IRestaurantsRepository.cs
-index c70fe53..4898d2e 100644
---- a/Restaurants.Domain/Repositories/IRestaurantsRepository.cs
-+++ b/Restaurants.Domain/Repositories/IRestaurantsRepository.cs
-@@ -1,3 +1,4 @@
-+using Restaurants.Domain.Constants;
- using Restaurants.Domain.Entities;
- 
- namespace Restaurants.Domain.Repositories
-@@ -10,6 +11,9 @@ namespace Restaurants.Domain.Repositories
- 
-         Task<Restaurant?> GetById(int id);
- 
-+        Task<(IEnumerable<Restaurant>, int)> GetAllMatching(
-+            string? searchPhrase, int pageNumber, int pageSize, string? sortBy, SortDirection sortDirection);
-+
-         Task SaveChanges();
- 
-         Task Delete(Restaurant entity);
-diff --git a/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs b/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
-index 8e1fe89..ed4c6eb 100644
---- a/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
-+++ b/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
-@@ -1,4 +1,6 @@
-+using System.Linq.Expressions;
- using Microsoft.EntityFrameworkCore;
-+using Restaurants.Domain.Constants;
- using Restaurants.Domain.Entities;
- using Restaurants.Domain.Repositories;
- using Restaurants.Infrastructure.Persistence;
-@@ -24,6 +26,42 @@ public class RestaurantsRepository(RestaurantsDbContext dbContext) : IRestaurant
-         return restaurants;
-     }
- 
-+    public async Task<(IEnumerable<Restaurant>, int)> GetAllMatching(
-+        string? searchPhrase, int pageNumber, int pageSize, string? sortBy, SortDirection sortDirection)
++    [Fact]
++    public void GetCurrentUser_WhenUserIsAuthenticated_ShouldReturnUser()
 +    {
-+        var searchPhraseLower = searchPhrase?.ToLower();
-+
-+        var baseQuery = dbContext.Restaurants
-+            .Where(r => searchPhraseLower == null ||
-+                        r.Name.ToLower().Contains(searchPhraseLower) ||
-+                        r.Description.ToLower().Contains(searchPhraseLower));
-+
-+        var totalCount = await baseQuery.CountAsync();
-+
-+        if (sortBy != null)
++        // Arrange
++        var dateOfBirth = new DateOnly(1990, 1, 1);
++        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
++        var claims = new List<Claim>
 +        {
-+            var columnSelector = new Dictionary<string, Expression<Func<Restaurant, object>>>
-+            {
-+                {nameof(Restaurant.Name), r => r.Name},
-+                {nameof(Restaurant.Description), r => r.Description},
-+                {nameof(Restaurant.Category), r => r.Category}
-+            };
++            new(ClaimTypes.NameIdentifier, "1"),
++            new(ClaimTypes.Email, "test@example.com"),
++            new(ClaimTypes.Role, UserRoles.Admin),
++            new(ClaimTypes.Role, UserRoles.User),
++            new("Nationality", "German"),
++            new("DateOfBirth", dateOfBirth.ToString("yyyy-MM-dd")),
++        };
 +
-+            var selectedColumn = columnSelector[sortBy];
++        var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
++        
++        httpContextAccessorMock.Setup(x => x.HttpContext).Returns(new DefaultHttpContext { User = user });
 +
-+            baseQuery = sortDirection == SortDirection.Ascending
-+                ? baseQuery.OrderBy(selectedColumn)
-+                : baseQuery.OrderByDescending(selectedColumn);
-+        }
++        var userContext = new UserContext(httpContextAccessorMock.Object);
 +
-+        var restaurants = await baseQuery
-+            .Skip((pageNumber - 1) * pageSize)
-+            .Take(pageSize)
-+            .ToListAsync();
++        // Act
++        var currentUser = userContext.GetCurrentUser();
 +
-+        return (restaurants, totalCount);
++        // Assert
++        currentUser.Should().NotBeNull();
++        currentUser.Id.Should().Be("1");
++        currentUser.Email.Should().Be("test@example.com");
++        currentUser.Roles.Should().ContainInOrder(UserRoles.Admin, UserRoles.User);
++        currentUser.Nationality.Should().Be("German");
++        currentUser.DateOfBirth.Should().Be(dateOfBirth);
 +    }
 +
-     public async Task<Restaurant?> GetById(int id)
-     {
-         var restaurant = await dbContext.Restaurants
++    [Fact]
++    public void GetCurrentUser_WhenUserContextIsNotPresent_ShouldThrowInvalidOperationException()
++    {
++        // Arrange
++        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
++        httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext?)null);
++
++        var userContext = new UserContext(httpContextAccessorMock.Object);
++
++        // Act
++        var action = () => userContext.GetCurrentUser();
++
++        // Assert
++        action.Should().Throw<InvalidOperationException>().WithMessage("User context is not present");
++    }
++}
