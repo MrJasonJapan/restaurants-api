@@ -1,198 +1,605 @@
-diff --git a/Restaurants.API/Restaurants.API.sln b/Restaurants.API/Restaurants.API.sln
-index df19601..349c078 100644
---- a/Restaurants.API/Restaurants.API.sln
-+++ b/Restaurants.API/Restaurants.API.sln
-@@ -1,14 +1,17 @@
-+﻿
- Microsoft Visual Studio Solution File, Format Version 12.00
- # Visual Studio Version 17
- VisualStudioVersion = 17.0.31903.59
- MinimumVisualStudioVersion = 10.0.40219.1
- Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.API", "Restaurants.API.csproj", "{F35ABE87-FA59-4A1B-A03B-864654BE9559}"
- EndProject
--Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Domain", "..\Restaurants.Domain\Restaurants.Domain.csproj", "{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}"
-+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Domain", "..\Restaurants.Domain\Restaurants.Domain.csproj", "{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}"
- EndProject
--Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Application", "..\Restaurants.Application\Restaurants.Application.csproj", "{6174B870-2C87-4A82-8C3A-25F86BB41434}"
-+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application", "..\Restaurants.Application\Restaurants.Application.csproj", "{6174B870-2C87-4A82-8C3A-25F86BB41434}"
- EndProject
--Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Infrastructure", "..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj", "{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}"
-+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Infrastructure", "..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj", "{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}"
-+EndProject
-+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Application.Tests", "..\Restaurants.Application.Tests\Restaurants.Application.Tests.csproj", "{A12771FD-9E18-46B3-81E3-7966F12E6BD8}"
- EndProject
- Global
- 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-@@ -32,6 +35,10 @@ Global
- 		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Debug|Any CPU.Build.0 = Debug|Any CPU
- 		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Release|Any CPU.ActiveCfg = Release|Any CPU
- 		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Release|Any CPU.Build.0 = Release|Any CPU
-+		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-+		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-+		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-+		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Release|Any CPU.Build.0 = Release|Any CPU
- 	EndGlobalSection
- 	GlobalSection(SolutionProperties) = preSolution
- 		HideSolutionNode = FALSE
-diff --git a/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj b/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
+diff --git a/Restaurants.API/Controllers/IdentityController.cs b/Restaurants.API/Controllers/IdentityController.cs
+index 28ca4db..3648974 100644
+--- a/Restaurants.API/Controllers/IdentityController.cs
++++ b/Restaurants.API/Controllers/IdentityController.cs
+@@ -1,9 +1,7 @@
+ using MediatR;
+ using Microsoft.AspNetCore.Authorization;
+ using Microsoft.AspNetCore.Mvc;
+-using Restaurants.Application.Users.Commands.AssignUserRole;
+-using Restaurants.Application.Users.Commands.UnassignUserRole;
+-using Restaurants.Application.Users.UpdateUserDetails.Commands;
++using Restaurants.Application.Users.Commands;
+ using Restaurants.Domain.Constants;
+ 
+ namespace restaurants_api.Controllers;
+diff --git a/Restaurants.API/Controllers/RestaurantsController.cs b/Restaurants.API/Controllers/RestaurantsController.cs
+index 9d8a7d7..8ea33b4 100644
+--- a/Restaurants.API/Controllers/RestaurantsController.cs
++++ b/Restaurants.API/Controllers/RestaurantsController.cs
+@@ -1,8 +1,6 @@
+ using Microsoft.AspNetCore.Mvc;
+ using MediatR;
+-using Restaurants.Application.Commands.UpdateRestaurant;
+-using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
+-using Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
++using Restaurants.Application.Restaurants.Commands;
+ using Restaurants.Application.Restaurants.Queries;
+ using Restaurants.Application.Restaurants.Dtos;
+ using Microsoft.AspNetCore.Authorization;
+diff --git a/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs b/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs
 new file mode 100644
-index 0000000..887c43f
+index 0000000..e716858
 --- /dev/null
-+++ b/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
-@@ -0,0 +1,31 @@
-+<Project Sdk="Microsoft.NET.Sdk">
-+
-+  <PropertyGroup>
-+    <TargetFramework>net8.0</TargetFramework>
-+    <ImplicitUsings>enable</ImplicitUsings>
-+    <Nullable>enable</Nullable>
-+
-+    <IsPackable>false</IsPackable>
-+    <IsTestProject>true</IsTestProject>
-+  </PropertyGroup>
-+
-+  <ItemGroup>
-+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-+    <PackageReference Include="FluentAssertions" Version="6.12.1" />
-+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-+    <PackageReference Include="Moq" Version="4.20.72" />
-+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
-+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
-+    <PackageReference Include="xunit" Version="2.6.6" />
-+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7" />
-+  </ItemGroup>
-+
-+  <ItemGroup>
-+    <ProjectReference Include="..\Restaurants.Application\Restaurants.Application.csproj" />
-+  </ItemGroup>
-+
-+  <ItemGroup>
-+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
-+  </ItemGroup>
-+
-+</Project>
-diff --git a/Restaurants.Application.Tests/Users/CurrentUserTests.cs b/Restaurants.Application.Tests/Users/CurrentUserTests.cs
-new file mode 100644
-index 0000000..205c0d5
---- /dev/null
-+++ b/Restaurants.Application.Tests/Users/CurrentUserTests.cs
-@@ -0,0 +1,50 @@
-+﻿using FluentAssertions;
-+using Restaurants.Domain.Constants;
++++ b/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs
+@@ -0,0 +1,94 @@
++using FluentValidation.TestHelper;
++using Restaurants.Application.Restaurants.Commands;
 +using Xunit;
 +
-+namespace restaurants_api.Application.Users.Tests;
++namespace Restaurants.Application.Tests.Restaurants.Commands;
 +
-+public class CurrentUserTests
++public class CreateRestaurantCommandValidatorTests
 +{
-+    // Naming Convention: TestMethodName_Scenario_ExpectedResult
-+    [Theory] // theory allows us to run the same test with multiple inputs
-+    [InlineData(UserRoles.Admin)]
-+    [InlineData(UserRoles.User)]
-+    public void IsInRole_WithMatchingRole_ShouldReturnTrue(string roleName)
++    [Fact]
++    public void Validator_ForValidCommand_ShouldNotHaveValidationErrors()
 +    {
-+        // arrange
-+        var currentUser = new CurrentUser(Guid.NewGuid().ToString(), "test@example.com", [UserRoles.Admin, UserRoles.User], null, null);
++        // Arrange
++        var command = new CreateRestaurantCommand()
++        {
++            Name = "Test",
++            Description = "Test",
++            Category = "Italian",
++            ContactEmail = "contact@example.com",
++            PostalCode = "123-4567",
++        };
 +
-+        // act
-+        var isInRole = currentUser.IsInRole(roleName);
++        var validator = new CreateRestaurantCommandValidator();
 +
-+        // assert
-+        isInRole.Should().BeTrue();
++        // Act
++        var result = validator.TestValidate(command);
++
++        // Assert
++        result.ShouldNotHaveAnyValidationErrors();
 +    }
 +
-+    [Fact()] // fact is for a single input test
-+    public void IsInRole_WithNoMatchingRole_ShouldReturnFalse()
++    [Fact]
++    public void Validator_ForInvalidCommand_ShouldHaveValidationErrors()
 +    {
-+        // arrange
-+        var currentUser = new CurrentUser(Guid.NewGuid().ToString(), "test@example.com", [UserRoles.Admin, UserRoles.User], null, null);
++        // Arrange
++        var command = new CreateRestaurantCommand()
++        {
++            Name = "Te",
++            Description = "",
++            Category = "Itazzz",
++            ContactEmail = "@example.com",
++            PostalCode = "1234567",
++        };
 +
-+        // act
-+        var isInRole = currentUser.IsInRole(UserRoles.Owner);
++        var validator = new CreateRestaurantCommandValidator();
 +
-+        // assert
-+        isInRole.Should().BeFalse();
++        // Act
++        var result = validator.TestValidate(command);
++
++        // Assert
++        result.ShouldHaveValidationErrorFor(c => c.Name);
++        result.ShouldHaveValidationErrorFor(c => c.Description);
++        result.ShouldHaveValidationErrorFor(c => c.Category);
++        result.ShouldHaveValidationErrorFor(c => c.ContactEmail);
++        result.ShouldHaveValidationErrorFor(c => c.PostalCode);
 +    }
 +
-+    [Fact()]
-+    public void IsInRole_WithNoMatchingRoleBecauseOfIncorrectCasing_ShouldReturnFalse()
++    [Theory]
++    [InlineData("Italian")]
++    [InlineData("Mexican")]
++    [InlineData("Japanese")]
++    [InlineData("American")]
++    [InlineData("Indian")]
++    public void Validator_ForValidCategory_ShouldNotHaveValidationError(string category)
 +    {
-+        // arrange
-+        var currentUser = new CurrentUser(Guid.NewGuid().ToString(), "test@example.com", [UserRoles.Admin, UserRoles.User], null, null);
++        // Arrange
++        var validator = new CreateRestaurantCommandValidator();
++        var command = new CreateRestaurantCommand { Category = category };
 +
-+        // act
-+        var isInRole = currentUser.IsInRole(UserRoles.Admin.ToLower()); // ※ IsInRole should be case-sensitive
++        // Act
++        var result = validator.TestValidate(command);
 +
-+        // assert
-+        isInRole.Should().BeFalse();
++        // Assert
++        result.ShouldNotHaveValidationErrorFor(c => c.Category);    
++    }
++
++
++
++    [Theory] // invalid postal codes
++    [InlineData("123456")]
++    [InlineData("12345-678")]
++    [InlineData("1234-5678")]
++    public void Validator_ForInvalidPostalCode_ShouldHaveValidationError(string postalCode)
++    {
++        // Arrange
++        var validator = new CreateRestaurantCommandValidator();
++        var command = new CreateRestaurantCommand { PostalCode = postalCode };
++
++        // Act
++        var result = validator.TestValidate(command);
++
++        // Assert
++        result.ShouldHaveValidationErrorFor(c => c.PostalCode);
++    }
++}
+diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommand.cs
+deleted file mode 100644
+index 204eee9..0000000
+--- a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommand.cs
++++ /dev/null
+@@ -1,25 +0,0 @@
+-using MediatR;
+-
+-namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
+-
+-public class CreateRestaurantCommand : IRequest<int>
+-{
+-    public string Name { get; set; } = default!;
+-
+-    public string Description { get; set; } = default!;
+-
+-    public string Category { get; set; } = default!;
+-
+-    public bool HasDelivery { get; set; }
+-
+-    public string? ContactEmail { get; set; }
+-
+-    public string? ContactNumber { get; set; }
+-
+-    public string? City { get; set; }
+-
+-    public string? Street { get; set; }
+-
+-    public string? PostalCode { get; set; }
+-}
+-
+diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs
+deleted file mode 100644
+index 01359e8..0000000
+--- a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs
++++ /dev/null
+@@ -1,40 +0,0 @@
+-using AutoMapper;
+-using MediatR;
+-using Microsoft.Extensions.Logging;
+-using Restaurants.Application.Users;
+-using Restaurants.Domain.Entities;
+-using Restaurants.Domain.Exceptions;
+-using Restaurants.Domain.Interfaces;
+-using Restaurants.Domain.Repositories;
+-using Restaurants.Domains.Constants;
+-
+-namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
+-
+-// handler class
+-public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandler> logger,
+-    IMapper mapper,
+-    IRestaurantsRepository restaurantsRepository,
+-    IRestaurantAuthorizationService restaurantAuthorizationService,
+-    IUserContext userContext)
+-    : IRequestHandler<CreateRestaurantCommand, int>
+-{
+-    public async Task<int> Handle(CreateRestaurantCommand request, CancellationToken cancellationToken)
+-    {
+-        var currentUser = userContext.GetCurrentUser();
+-
+-        logger.LogInformation("{UserEmail} [{UserId}] is creating a new restaurant {@Restaurant}",
+-            currentUser.Email,
+-            currentUser.Id,
+-            request);
+-
+-        var restaurant = mapper.Map<Restaurant>(request);
+-        restaurant.OwnerId = currentUser.Id;
+-
+-        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Create))
+-            throw new ForbidException();
+-
+-        int id = await restaurantsRepository.Create(restaurant);
+-
+-        return id;
+-    }
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandValidator.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandValidator.cs
+deleted file mode 100644
+index b05d24a..0000000
+--- a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandValidator.cs
++++ /dev/null
+@@ -1,34 +0,0 @@
+-using FluentValidation;
+-using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
+-
+-namespace Restaurants.Application.Restaurants.Validators;
+-
+-// An "Abastract" class is a class that cannot be instantiated on its own, but can be inherited by other classes.
+-// This can be beneficial when you want to create a class that should not be instantiated, but should be inherited by other classes.
+-public class CreateRestaurantCommandValidator : AbstractValidator<CreateRestaurantCommand>
+-{
+-
+-    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
+-
+-    public CreateRestaurantCommandValidator()
+-    {
+-        RuleFor(dto => dto.Name)
+-            .Length(3, 100);
+-
+-        RuleFor(dto => dto.Description)
+-            .NotEmpty()
+-            .WithMessage("Description may not be empty");
+-
+-        RuleFor(dto => dto.Category)
+-            .Must(validCategories.Contains)
+-            .WithMessage("Invalid category. Please choose from the valid categories.");
+-
+-        RuleFor(dto => dto.ContactEmail)
+-            .EmailAddress().When(dto => dto.ContactEmail != null)
+-            .WithMessage("Invalid email address");
+-
+-        RuleFor(dto => dto.PostalCode)
+-            .Matches(@"^\d{3}-\d{4}$").When(dto => dto.PostalCode != null)
+-            .WithMessage("Invalid postal code. Please use the format (XXX-XXXX).");
+-    }
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs
+new file mode 100644
+index 0000000..4145400
+--- /dev/null
++++ b/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs
+@@ -0,0 +1,84 @@
++using AutoMapper;
++using FluentValidation;
++using MediatR;
++using Microsoft.Extensions.Logging;
++using Restaurants.Application.Users;
++using Restaurants.Domain.Entities;
++using Restaurants.Domain.Exceptions;
++using Restaurants.Domain.Interfaces;
++using Restaurants.Domain.Repositories;
++using Restaurants.Domains.Constants;
++
++namespace Restaurants.Application.Restaurants.Commands;
++
++public class CreateRestaurantCommand : IRequest<int>
++{
++    public string Name { get; set; } = default!;
++    public string Description { get; set; } = default!;
++    public string Category { get; set; } = default!;
++    public bool HasDelivery { get; set; }
++    public string? ContactEmail { get; set; }
++    public string? ContactNumber { get; set; }
++    public string? City { get; set; }
++    public string? Street { get; set; }
++    public string? PostalCode { get; set; }
++}
++
++// An "Abastract" class is a class that cannot be instantiated on its own, but can be inherited by other classes.
++// This can be beneficial when you want to create a class that should not be instantiated, but should be inherited by other classes.
++public class CreateRestaurantCommandValidator : AbstractValidator<CreateRestaurantCommand>
++{
++
++    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
++
++    public CreateRestaurantCommandValidator()
++    {
++        RuleFor(dto => dto.Name)
++            .Length(3, 100);
++
++        RuleFor(dto => dto.Description)
++            .NotEmpty()
++            .WithMessage("Description may not be empty");
++
++        RuleFor(dto => dto.Category)
++            .Must(validCategories.Contains)
++            .WithMessage("Invalid category. Please choose from the valid categories.");
++
++        RuleFor(dto => dto.ContactEmail)
++            .EmailAddress().When(dto => dto.ContactEmail != null)
++            .WithMessage("Invalid email address");
++
++        RuleFor(dto => dto.PostalCode)
++            .Matches(@"^\d{3}-\d{4}$").When(dto => dto.PostalCode != null)
++            .WithMessage("Invalid postal code. Please use the format (XXX-XXXX).");
++    }
++}
++
++// handler class
++public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandler> logger,
++    IMapper mapper,
++    IRestaurantsRepository restaurantsRepository,
++    IRestaurantAuthorizationService restaurantAuthorizationService,
++    IUserContext userContext)
++    : IRequestHandler<CreateRestaurantCommand, int>
++{
++    public async Task<int> Handle(CreateRestaurantCommand request, CancellationToken cancellationToken)
++    {
++        var currentUser = userContext.GetCurrentUser();
++
++        logger.LogInformation("{UserEmail} [{UserId}] is creating a new restaurant {@Restaurant}",
++            currentUser.Email,
++            currentUser.Id,
++            request);
++
++        var restaurant = mapper.Map<Restaurant>(request);
++        restaurant.OwnerId = currentUser.Id;
++
++        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Create))
++            throw new ForbidException();
++
++        int id = await restaurantsRepository.Create(restaurant);
++
++        return id;
 +    }
 +}
 \ No newline at end of file
-diff --git a/Restaurants.Application.Tests/Users/UserContextTests.cs b/Restaurants.Application.Tests/Users/UserContextTests.cs
-new file mode 100644
-index 0000000..d5cd833
---- /dev/null
-+++ b/Restaurants.Application.Tests/Users/UserContextTests.cs
-@@ -0,0 +1,62 @@
-+using System.Security.Claims;
-+using FluentAssertions;
-+using Microsoft.AspNetCore.Http;
-+using Moq;
-+using Restaurants.Application.Users;
-+using Restaurants.Domain.Constants;
-+using Xunit;
+diff --git a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommand.cs
+deleted file mode 100644
+index 779888b..0000000
+--- a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommand.cs
++++ /dev/null
+@@ -1,9 +0,0 @@
+-using MediatR;
+-
+-namespace Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
+-
+-public class DeleteRestaurantCommand(int id) : IRequest
+-{
+-    public int Id { get; set; } = id;
+-}
+-
+diff --git a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
+similarity index 88%
+rename from Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs
+rename to Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
+index 0ca7563..6a8619d 100644
+--- a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs
++++ b/Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
+@@ -6,7 +6,12 @@ using Restaurants.Domain.Interfaces;
+ using Restaurants.Domain.Repositories;
+ using Restaurants.Domains.Constants;
+ 
+-namespace Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
++namespace Restaurants.Application.Restaurants.Commands;
 +
-+namespace Restaurants.Application.Tests.Users;
-+
-+public class UserContextTests
++public class DeleteRestaurantCommand(int id) : IRequest
 +{
-+    [Fact]
-+    public void GetCurrentUser_WhenUserIsAuthenticated_ShouldReturnUser()
++    public int Id { get; set; } = id;
++}
+ 
+ public class DeleteRestaurantCommandHandler(ILogger<DeleteRestaurantCommandHandler> logger,
+     IRestaurantsRepository restaurantsRepository,
+diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommand.cs
+deleted file mode 100644
+index 7fb90f7..0000000
+--- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommand.cs
++++ /dev/null
+@@ -1,15 +0,0 @@
+-using MediatR;
+-
+-namespace Restaurants.Application.Commands.UpdateRestaurant;
+-
+-public class UpdateRestaurantCommand : IRequest
+-{
+-    public int Id { get; set; }
+-
+-    public string Name { get; set; } = default!;
+-
+-    public string Description { get; set; } = default!;
+-
+-    public bool HasDelivery { get; set; }
+-}
+-
+diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandValidator.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandValidator.cs
+deleted file mode 100644
+index 070ab6c..0000000
+--- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandValidator.cs
++++ /dev/null
+@@ -1,19 +0,0 @@
+-using FluentValidation;
+-using Restaurants.Application.Commands.UpdateRestaurant;
+-
+-namespace Restaurants.Application.Restaurants.Commands.UpdateRestaurant;
+-
+-public class UpdateRestaurantCommandValidator : AbstractValidator<UpdateRestaurantCommand>
+-{
+-    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
+-
+-    public UpdateRestaurantCommandValidator()
+-    {
+-        RuleFor(dto => dto.Name)
+-            .Length(3, 100);
+-
+-        RuleFor(dto => dto.Description)
+-            .NotEmpty()
+-            .WithMessage("Description may not be empty");
+-    }
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
+similarity index 63%
+rename from Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs
+rename to Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
+index 98e85a1..5b07838 100644
+--- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs
++++ b/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
+@@ -1,14 +1,40 @@
+ using AutoMapper;
++using FluentValidation;
+ using MediatR;
+ using Microsoft.Extensions.Logging;
+-using Restaurants.Application.Commands.UpdateRestaurant;
+ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Exceptions;
+ using Restaurants.Domain.Interfaces;
+ using Restaurants.Domain.Repositories;
+ using Restaurants.Domains.Constants;
+ 
+-namespace Restaurants.Application.Restaurants.Commands.UpdateRestaurant;
++namespace Restaurants.Application.Restaurants.Commands;
++
++public class UpdateRestaurantCommand : IRequest
++{
++    public int Id { get; set; }
++
++    public string Name { get; set; } = default!;
++
++    public string Description { get; set; } = default!;
++
++    public bool HasDelivery { get; set; }
++}
++
++public class UpdateRestaurantCommandValidator : AbstractValidator<UpdateRestaurantCommand>
++{
++    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
++
++    public UpdateRestaurantCommandValidator()
 +    {
-+        // Arrange
-+        var dateOfBirth = new DateOnly(1990, 1, 1);
-+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-+        var claims = new List<Claim>
-+        {
-+            new(ClaimTypes.NameIdentifier, "1"),
-+            new(ClaimTypes.Email, "test@example.com"),
-+            new(ClaimTypes.Role, UserRoles.Admin),
-+            new(ClaimTypes.Role, UserRoles.User),
-+            new("Nationality", "German"),
-+            new("DateOfBirth", dateOfBirth.ToString("yyyy-MM-dd")),
-+        };
++        RuleFor(dto => dto.Name)
++            .Length(3, 100);
 +
-+        var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
-+        
-+        httpContextAccessorMock.Setup(x => x.HttpContext).Returns(new DefaultHttpContext { User = user });
-+
-+        var userContext = new UserContext(httpContextAccessorMock.Object);
-+
-+        // Act
-+        var currentUser = userContext.GetCurrentUser();
-+
-+        // Assert
-+        currentUser.Should().NotBeNull();
-+        currentUser.Id.Should().Be("1");
-+        currentUser.Email.Should().Be("test@example.com");
-+        currentUser.Roles.Should().ContainInOrder(UserRoles.Admin, UserRoles.User);
-+        currentUser.Nationality.Should().Be("German");
-+        currentUser.DateOfBirth.Should().Be(dateOfBirth);
-+    }
-+
-+    [Fact]
-+    public void GetCurrentUser_WhenUserContextIsNotPresent_ShouldThrowInvalidOperationException()
-+    {
-+        // Arrange
-+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-+        httpContextAccessorMock.Setup(x => x.HttpContext).Returns((HttpContext?)null);
-+
-+        var userContext = new UserContext(httpContextAccessorMock.Object);
-+
-+        // Act
-+        var action = () => userContext.GetCurrentUser();
-+
-+        // Assert
-+        action.Should().Throw<InvalidOperationException>().WithMessage("User context is not present");
++        RuleFor(dto => dto.Description)
++            .NotEmpty()
++            .WithMessage("Description may not be empty");
 +    }
 +}
+ 
+ public class UpdateRestaurantCommandHandler(ILogger<UpdateRestaurantCommandHandler> logger, IMapper mapper,
+     IRestaurantAuthorizationService restaurantAuthorizationService,
+diff --git a/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs b/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
+index 0d3a5c8..019f0e6 100644
+--- a/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
++++ b/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
+@@ -1,6 +1,5 @@
+ using AutoMapper;
+-using Restaurants.Application.Commands.UpdateRestaurant;
+-using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
++using Restaurants.Application.Restaurants.Commands;
+ using Restaurants.Domain.Entities;
+ 
+ namespace Restaurants.Application.Restaurants.Dtos;
+diff --git a/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommand.cs b/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommand.cs
+deleted file mode 100644
+index 6aa433f..0000000
+--- a/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommand.cs
++++ /dev/null
+@@ -1,10 +0,0 @@
+-using MediatR;
+-
+-namespace Restaurants.Application.Users.Commands.AssignUserRole;
+-
+-public class AssignUserRoleCommand : IRequest
+-{
+-    public string UserEmail { get; set; } = default!;
+-
+-    public string RoleName { get; set; } = default!;
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommandHandler.cs b/Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
+similarity index 85%
+rename from Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommandHandler.cs
+rename to Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
+index 657fffa..6b21fc3 100644
+--- a/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommandHandler.cs
++++ b/Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
+@@ -1,11 +1,16 @@
+ using MediatR;
+ using Microsoft.AspNetCore.Identity;
+ using Microsoft.Extensions.Logging;
+-using Restaurants.Application.Users.UpdateUserDetails.Commands;
+ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Exceptions;
+ 
+-namespace Restaurants.Application.Users.Commands.AssignUserRole;
++namespace Restaurants.Application.Users.Commands;
++
++public class AssignUserRoleCommand : IRequest
++{
++    public string UserEmail { get; set; } = default!;
++    public string RoleName { get; set; } = default!;
++}
+ 
+ public class AssignUserRoleCommandHandler(
+     ILogger<AssignUserRoleCommandHandler> logger,
+diff --git a/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommandHandler.cs b/Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
+similarity index 83%
+rename from Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommandHandler.cs
+rename to Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
+index aa66206..d5c8d48 100644
+--- a/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommandHandler.cs
++++ b/Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
+@@ -4,7 +4,13 @@ using Microsoft.Extensions.Logging;
+ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Exceptions;
+ 
+-namespace Restaurants.Application.Users.Commands.UnassignUserRole;
++namespace Restaurants.Application.Users.Commands;
++
++public class UnassignUserRoleCommand : IRequest
++{
++    public string UserEmail { get; set; } = default!;
++    public string RoleName { get; set; } = default!;
++}
+ 
+ public class UnassignUserRoleCommandHandler(
+     ILogger<UnassignUserRoleCommandHandler> logger,
+diff --git a/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommand.cs b/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommand.cs
+deleted file mode 100644
+index e1399a4..0000000
+--- a/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommand.cs
++++ /dev/null
+@@ -1,10 +0,0 @@
+-using MediatR;
+-
+-namespace Restaurants.Application.Users.Commands.UnassignUserRole;
+-
+-public class UnassignUserRoleCommand : IRequest
+-{
+-    public string UserEmail { get; set; } = default!;
+-
+-    public string RoleName { get; set; } = default!;
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommand.cs b/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommand.cs
+deleted file mode 100644
+index 8d08c4f..0000000
+--- a/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommand.cs
++++ /dev/null
+@@ -1,10 +0,0 @@
+-using MediatR;
+-
+-namespace Restaurants.Application.Users.UpdateUserDetails.Commands;
+-
+-public class UpdateUserDetailsCommand : IRequest
+-{
+-    public DateOnly? DateOfBirth { get; set; }
+-
+-    public string? Nationality { get; set; }
+-}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommandHandler.cs b/Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
+similarity index 83%
+rename from Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommandHandler.cs
+rename to Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
+index 7792eca..64d6aa0 100644
+--- a/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommandHandler.cs
++++ b/Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
+@@ -4,7 +4,13 @@ using Microsoft.Extensions.Logging;
+ using Restaurants.Domain.Entities;
+ using Restaurants.Domain.Exceptions;
+ 
+-namespace Restaurants.Application.Users.UpdateUserDetails.Commands;
++namespace Restaurants.Application.Users.Commands;
++
++public class UpdateUserDetailsCommand : IRequest
++{
++    public DateOnly? DateOfBirth { get; set; }
++    public string? Nationality { get; set; }
++}
+ 
+ public class UpdateUserDetailsCommandHandler(
+     ILogger<UpdateUserDetailsCommandHandler> logger,

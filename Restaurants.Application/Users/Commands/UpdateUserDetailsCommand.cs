@@ -4,7 +4,13 @@ using Microsoft.Extensions.Logging;
 using Restaurants.Domain.Entities;
 using Restaurants.Domain.Exceptions;
 
-namespace Restaurants.Application.Users.UpdateUserDetails.Commands;
+namespace Restaurants.Application.Users.Commands;
+
+public class UpdateUserDetailsCommand : IRequest
+{
+    public DateOnly? DateOfBirth { get; set; }
+    public string? Nationality { get; set; }
+}
 
 public class UpdateUserDetailsCommandHandler(
     ILogger<UpdateUserDetailsCommandHandler> logger,

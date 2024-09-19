@@ -1,9 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Restaurants.Application.Users.Commands.AssignUserRole;
-using Restaurants.Application.Users.Commands.UnassignUserRole;
-using Restaurants.Application.Users.UpdateUserDetails.Commands;
+using Restaurants.Application.Users.Commands;
 using Restaurants.Domain.Constants;
 
 namespace restaurants_api.Controllers;

@@ -1,11 +1,16 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using Restaurants.Application.Users.UpdateUserDetails.Commands;
 using Restaurants.Domain.Entities;
 using Restaurants.Domain.Exceptions;
 
-namespace Restaurants.Application.Users.Commands.AssignUserRole;
+namespace Restaurants.Application.Users.Commands;
+
+public class AssignUserRoleCommand : IRequest
+{
+    public string UserEmail { get; set; } = default!;
+    public string RoleName { get; set; } = default!;
+}
 
 public class AssignUserRoleCommandHandler(
     ILogger<AssignUserRoleCommandHandler> logger,

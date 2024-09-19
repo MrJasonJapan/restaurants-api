@@ -1,14 +1,40 @@
 using AutoMapper;
+using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Restaurants.Application.Commands.UpdateRestaurant;
 using Restaurants.Domain.Entities;
 using Restaurants.Domain.Exceptions;
 using Restaurants.Domain.Interfaces;
 using Restaurants.Domain.Repositories;
 using Restaurants.Domains.Constants;
 
-namespace Restaurants.Application.Restaurants.Commands.UpdateRestaurant;
+namespace Restaurants.Application.Restaurants.Commands;
+
+public class UpdateRestaurantCommand : IRequest
+{
+    public int Id { get; set; }
+
+    public string Name { get; set; } = default!;
+
+    public string Description { get; set; } = default!;
+
+    public bool HasDelivery { get; set; }
+}
+
+public class UpdateRestaurantCommandValidator : AbstractValidator<UpdateRestaurantCommand>
+{
+    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
+
+    public UpdateRestaurantCommandValidator()
+    {
+        RuleFor(dto => dto.Name)
+            .Length(3, 100);
+
+        RuleFor(dto => dto.Description)
+            .NotEmpty()
+            .WithMessage("Description may not be empty");
+    }
+}
 
 public class UpdateRestaurantCommandHandler(ILogger<UpdateRestaurantCommandHandler> logger, IMapper mapper,
     IRestaurantAuthorizationService restaurantAuthorizationService,

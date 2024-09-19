@@ -4,7 +4,13 @@ using Microsoft.Extensions.Logging;
 using Restaurants.Domain.Entities;
 using Restaurants.Domain.Exceptions;
 
-namespace Restaurants.Application.Users.Commands.UnassignUserRole;
+namespace Restaurants.Application.Users.Commands;
+
+public class UnassignUserRoleCommand : IRequest
+{
+    public string UserEmail { get; set; } = default!;
+    public string RoleName { get; set; } = default!;
+}
 
 public class UnassignUserRoleCommandHandler(
     ILogger<UnassignUserRoleCommandHandler> logger,

@@ -6,7 +6,12 @@ using Restaurants.Domain.Interfaces;
 using Restaurants.Domain.Repositories;
 using Restaurants.Domains.Constants;
 
-namespace Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
+namespace Restaurants.Application.Restaurants.Commands;
+
+public class DeleteRestaurantCommand(int id) : IRequest
+{
+    public int Id { get; set; } = id;
+}
 
 public class DeleteRestaurantCommandHandler(ILogger<DeleteRestaurantCommandHandler> logger,
     IRestaurantsRepository restaurantsRepository,

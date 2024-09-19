@@ -1,3 +1,29 @@
+commit 54d8a2f65f65dd544a4cbbef77bfbaebb31bdffc
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Thu Sep 19 21:29:31 2024 +0900
+
+    Add Unit Tests for User Management and Authorization
+    
+    ※ Used Visual Studio Code to Create Test Project, and Tests
+    See: https://www.notion.so/mr-kobayashi/NET-8-0-API-restaurants-api-c6051cb4c6b244c1bd56844bcd2334d3?pvs=4#4d8116bc8af04c9ea8502216d5d66cea
+    
+    - Created new project 'Restaurants.Application.Tests' for unit testing the application layer.
+    - Implemented unit tests for CurrentUser class:
+      - Added tests to verify IsInRole functionality with matching and non-matching roles.
+      - Included a test to ensure case-sensitivity in role checking.
+    - Added unit tests for UserContext class:
+      - Implemented test for GetCurrentUser when user is authenticated, verifying correct parsing of claims.
+      - Added test to check for InvalidOperationException when user context is not present.
+    - Updated solution file to include the new test project.
+    - Added necessary package references for testing:
+      - Included FluentAssertions, Moq, MSTest, and xunit for comprehensive testing capabilities.
+    - Ensured test project references the main Restaurants.Application project.
+    
+    These tests enhance the reliability of the user management and authorization components,
+    covering key scenarios such as role verification and user context retrieval. The addition
+    of a dedicated test project sets the foundation for continued test-driven development
+    practices in the application layer.
+
 commit 2abd22bdb31334565e1105299bc02d93b2bad83b
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Wed Sep 18 21:22:51 2024 +0900

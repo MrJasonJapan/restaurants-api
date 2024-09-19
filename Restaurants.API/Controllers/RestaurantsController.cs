@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using Restaurants.Application.Commands.UpdateRestaurant;
-using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
-using Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
+using Restaurants.Application.Restaurants.Commands;
 using Restaurants.Application.Restaurants.Queries;
 using Restaurants.Application.Restaurants.Dtos;
 using Microsoft.AspNetCore.Authorization;
