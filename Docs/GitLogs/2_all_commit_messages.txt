@@ -1,3 +1,33 @@
+commit 14ef13408f950dfc046e929f37eb672cef9e6cfc
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Fri Sep 20 22:37:52 2024 +0900
+
+    Add Infrastructure Tests and Refactor Authorization Requirements
+    
+    - Created new project 'Restaurants.Infrastructure.Tests' for unit testing the infrastructure layer.
+    
+    - Implemented CreatedMultipleRestaurantsRequirementHandlerTests:
+      - Added test for successful scenario where user has created multiple restaurants.
+      - Added test for scenario where user has not created multiple restaurants.
+      - Mocked dependencies including IUserContext and IRestaurantsRepository.
+      - Verified correct behavior of CreatedMultipleRestaurantsRequirementHandler.
+    
+    - Refactored CreatedMultipleRestaurantsRequirementHandler:
+      - Moved implementation to test file, suggesting a potential refactor or removal of the original handler.
+    
+    - Updated solution file to include the new Infrastructure.Tests project.
+    
+    - Added assembly.cs file in Restaurants.Infrastructure:
+      - Used InternalsVisibleTo attribute to make internal members visible to the test project.
+      - By default, internal members are only accessible within the same assembly. This attribute relaxes that restriction for testing purposes.
+    
+    These changes enhance the testability of the infrastructure layer, particularly focusing on
+    authorization requirements. The addition of unit tests for the CreatedMultipleRestaurantsRequirementHandler
+    improves the reliability of the authorization logic. The refactoring of the handler suggests
+    a potential redesign of the authorization system, which should be reviewed and finalized in
+    subsequent commits. The use of InternalsVisibleTo allows for thorough testing of internal
+    components without compromising encapsulation in the production code.
+
 commit 870909033a048fd6f770dbb0b745f6b02bb59dc7
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Fri Sep 20 20:57:16 2024 +0900
