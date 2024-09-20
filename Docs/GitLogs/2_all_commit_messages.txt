@@ -1,3 +1,31 @@
+commit 870909033a048fd6f770dbb0b745f6b02bb59dc7
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Fri Sep 20 20:57:16 2024 +0900
+
+    Add Unit Tests for Restaurant Command Handlers and AutoMapper Profiles
+    
+    - Implemented CreateRestaurantCommandHandlerTests:
+      - Added test for successful restaurant creation scenario.
+      - Mocked dependencies including ILogger, IMapper, IRestaurantsRepository, IRestaurantAuthorizationService, and IUserContext.
+      - Verified correct OwnerId assignment and repository interaction.
+    
+    - Created UpdateRestaurantCommandHandlerTests:
+      - Added tests for successful update, non-existing restaurant, and unauthorized access scenarios.
+      - Implemented setup for mocking dependencies and initializing the handler.
+      - Used FluentAssertions for more expressive test assertions.
+    
+    - Added RestaurantsProfileTests:
+      - Implemented tests for mapping Restaurant to RestaurantDto.
+      - Added tests for mapping CreateRestaurantCommand and UpdateRestaurantCommand to Restaurant.
+      - Verified correct mapping of all relevant properties, including nested Address object.
+    
+    - Minor refactoring:
+      - Fixed a typo in UpdateRestaurantCommand.cs comment.
+    
+    These tests enhance the reliability of the restaurant-related command handlers and AutoMapper profiles,
+    covering key scenarios such as creation, update, and data mapping. The addition of these unit tests
+    improves code quality and helps prevent regressions in future development.
+
 commit b0784c59d35bc405f71c765afefe541c48485a34
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Fri Sep 20 00:11:42 2024 +0900

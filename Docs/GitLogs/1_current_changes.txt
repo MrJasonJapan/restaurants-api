@@ -1,350 +1,243 @@
-diff --git a/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs b/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs
+diff --git a/Restaurants.API/Restaurants.API.sln b/Restaurants.API/Restaurants.API.sln
+index 349c078..40082b4 100644
+--- a/Restaurants.API/Restaurants.API.sln
++++ b/Restaurants.API/Restaurants.API.sln
+@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application", "
+ EndProject
+ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Infrastructure", "..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj", "{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}"
+ EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Application.Tests", "..\Restaurants.Application.Tests\Restaurants.Application.Tests.csproj", "{A12771FD-9E18-46B3-81E3-7966F12E6BD8}"
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application.Tests", "..\Restaurants.Application.Tests\Restaurants.Application.Tests.csproj", "{A12771FD-9E18-46B3-81E3-7966F12E6BD8}"
++EndProject
++Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Infrastructure.Tests", "..\Restaurants.Infrastructure.Tests\Restaurants.Infrastructure.Tests.csproj", "{92729516-8C33-4F2C-A93D-FF4DCA030B03}"
+ EndProject
+ Global
+ 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+@@ -39,6 +41,10 @@ Global
+ 		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+ 		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+ 		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Release|Any CPU.Build.0 = Release|Any CPU
++		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Release|Any CPU.Build.0 = Release|Any CPU
+ 	EndGlobalSection
+ 	GlobalSection(SolutionProperties) = preSolution
+ 		HideSolutionNode = FALSE
+diff --git a/Restaurants.Infrastructure.Tests/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandlerTests.cs b/Restaurants.Infrastructure.Tests/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandlerTests.cs
 new file mode 100644
-index 0000000..cce113a
+index 0000000..3117793
 --- /dev/null
-+++ b/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs
-@@ -0,0 +1,77 @@
-+using AutoMapper;
++++ b/Restaurants.Infrastructure.Tests/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandlerTests.cs
+@@ -0,0 +1,90 @@
 +using FluentAssertions;
-+using Microsoft.Extensions.Logging;
++using Microsoft.AspNetCore.Authorization;
 +using Moq;
 +using Restaurants.Application.Users;
 +using Restaurants.Domain.Entities;
-+using Restaurants.Domain.Interfaces;
 +using Restaurants.Domain.Repositories;
-+using Restaurants.Domains.Constants;
 +using restaurants_api.Application.Users;
 +using Xunit;
 +
-+namespace Restaurants.Application.Restaurants.Commands.Tests;
++namespace Restaurants.Infrastructure.Authorization.Requirements.Tests;
 +
-+public class CreateRestaurantCommandHandlerTests
++public class CreatedMultipleRestaurantsRequirementHandlerTests
 +{
 +    [Fact]
-+    public async Task Handle_ForValidCommand_ShouldReturnCreatedRestaurantIdAsync()
++    public async Task HandleRequirementAsync_UserHasCreatedMultipleRestaurants_ShouldSucceedAsync()
 +    {
 +        // Arrange
-+
-+        // Mock the logger dependency
-+        var loggerMock = new Mock<ILogger<CreateRestaurantCommandHandler>>();
-+
-+        // Mock the mapper dependency and set up its behavior
-+        var mapperMock = new Mock<IMapper>();
-+        var command = new CreateRestaurantCommand();
-+        var restaurant = new Restaurant();
-+        mapperMock.Setup(mapper => mapper.Map<Restaurant>(command)).Returns(restaurant);
-+
-+        // Mock the repository dependency and set up its behavior
-+        var restaurantsRepositoryMock = new Mock<IRestaurantsRepository>();
-+        restaurantsRepositoryMock.Setup(repo => repo.Create(It.IsAny<Restaurant>())).ReturnsAsync(1);
-+
-+        // Mock the authorization service and set it to authorize the operation
-+        var restaurantAuthorizationServiceMock = new Mock<IRestaurantAuthorizationService>();
-+        restaurantAuthorizationServiceMock
-+            .Setup(service => service.Authorize(It.IsAny<Restaurant>(), ResourceOperation.Create))
-+            .Returns(true);
-+
-+        // Mock the user context and set up the current user
-+        var userContextMock = new Mock<IUserContext>();
-+        var currentUser = new CurrentUser("owner-id", "test@test.com", new List<string>(), null, null);
-+        userContextMock.Setup(context => context.GetCurrentUser()).Returns(currentUser);
-+
-+        // Create an instance of the handler with mocked dependencies
-+        // Note: We are testing the actual implementation of CreateRestaurantCommandHandler
-+        // * Testing the Implementation: You are testing the real implementation of CreateRestaurantCommandHandler.
-+        // * The handler's code is executed as it would be in production.
-+        // * Mocking Dependencies: By mocking dependencies like ILogger, IMapper, IRestaurantsRepository, IRestaurantAuthorizationService,
-+        // * and IUserContext, you control their outputs and interactions.
-+        // * This isolation ensures that any test failures are due to issues in the handler itself, not in external services.
-+        var commandHandler = new CreateRestaurantCommandHandler(
-+            loggerMock.Object,
-+            mapperMock.Object,
-+            restaurantsRepositoryMock.Object,
-+            restaurantAuthorizationServiceMock.Object,
-+            userContextMock.Object
-+        );
-+
-+        // Act
-+
-+        // Call the Handle method to test the handler's logic
-+        var result = await commandHandler.Handle(command, CancellationToken.None);
-+
-+        // Assert
-+
-+        // Verify that the handler returns the expected restaurant ID
-+        result.Should().Be(1);
-+
-+        // Verify that the restaurant's OwnerId is set correctly
-+        restaurant.OwnerId.Should().Be("owner-id");
-+
-+        // Verify that the repository's Create method was called once with the correct restaurant
-+        restaurantsRepositoryMock.Verify(repo => repo.Create(restaurant), Times.Once);
-+    }
-+}
-diff --git a/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs b/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs
-new file mode 100644
-index 0000000..b5bba5a
---- /dev/null
-+++ b/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs
-@@ -0,0 +1,122 @@
-+using AutoMapper;
-+using FluentAssertions;
-+using Microsoft.Extensions.Logging;
-+using Moq;
-+using Restaurants.Application.Users;
-+using Restaurants.Domain.Entities;
-+using Restaurants.Domain.Exceptions;
-+using Restaurants.Domain.Interfaces;
-+using Restaurants.Domain.Repositories;
-+using Restaurants.Domains.Constants;
-+using Xunit;
-+
-+namespace Restaurants.Application.Restaurants.Commands.Tests;
-+
-+public class UpdateRestaurantCommandHandlerTests
-+{
-+    private readonly Mock<ILogger<UpdateRestaurantCommandHandler>> _loggerMock;
-+    private readonly Mock<IRestaurantsRepository> _restaurantsRepositoryMock;
-+    private readonly Mock<IMapper> _mapperMock;
-+    private readonly Mock<IRestaurantAuthorizationService> _restaurantAuthorizationServiceMock;
-+
-+    private readonly UpdateRestaurantCommandHandler _handler;
-+
-+    public UpdateRestaurantCommandHandlerTests()
-+    {
-+        _loggerMock = new Mock<ILogger<UpdateRestaurantCommandHandler>>();
-+        _restaurantsRepositoryMock = new Mock<IRestaurantsRepository>();
-+        _mapperMock = new Mock<IMapper>();
-+        _restaurantAuthorizationServiceMock = new Mock<IRestaurantAuthorizationService>();
-+
-+        _handler = new UpdateRestaurantCommandHandler(
-+            _loggerMock.Object,
-+            _mapperMock.Object,
-+            _restaurantAuthorizationServiceMock.Object,
-+            _restaurantsRepositoryMock.Object);
-+    }
-+
-+    // continue here.
-+    // hande with valid request should update restaurant
-+    [Fact()]
-+    public async Task Handle_WithValidRequest_ShouldUpdateRestaurant()
-+    {
-+        // Arrange
-+        var restaurantId = 1;
-+        var command = new UpdateRestaurantCommand
-+        {
-+            Id = restaurantId,
-+            Name = "Updated Restaurant",
-+            Description = "Updated Description",
-+            HasDelivery = true
-+        };
-+
-+        var restaurant = new Restaurant
-+        {
-+            Id = restaurantId,
-+            Name = "Original Restaurant",
-+            Description = "Original Description",
-+        };
-+
-+        _restaurantsRepositoryMock.Setup(r => r.GetById(restaurantId)).ReturnsAsync(restaurant);
-+
-+        _restaurantAuthorizationServiceMock.Setup(r => r.Authorize(restaurant, ResourceOperation.Update)).Returns(true);
++        var currentUser = new CurrentUser("1", "test@test.com", new List<string>(), null, null);
 +        
-+        // Act
-+        await _handler.Handle(command, CancellationToken.None);
++        // Mock the IUserContext to return the currentUser when GetCurrentUser is called
++        var userContextMock = new Mock<IUserContext>();
++        userContextMock.Setup(u => u.GetCurrentUser()).Returns(currentUser);
 +
-+        // Assert
-+        _restaurantsRepositoryMock.Verify(r => r.SaveChanges(), Times.Once);
-+        _mapperMock.Verify(m => m.Map(command, restaurant), Times.Once);
-+    }
-+
-+    // handle with non existing restaurant should throw not found exception
-+    [Fact()]
-+    public async Task Handle_WithNonExistingRestaurant_ShouldThrowNotFoundException()
-+    {
-+        // Arrange
-+        var restaurantId = 1;
-+        var command = new UpdateRestaurantCommand
++        // Create a list of restaurants:
++        // - Two owned by currentUser
++        // - One owned by another user (Id "2")
++        var restaurants = new List<Restaurant>
 +        {
-+            Id = restaurantId
++            new Restaurant { OwnerId = currentUser.Id },
++            new Restaurant { OwnerId = currentUser.Id },
++            new Restaurant { OwnerId = "2" }
 +        };
 +
-+        _restaurantsRepositoryMock.Setup(r => r.GetById(restaurantId)).ReturnsAsync((Restaurant?)null);
++        // Mock the IRestaurantsRepository to return the above list when GetAll is called
++        var restaurantsRepositoryMock = new Mock<IRestaurantsRepository>();
++        restaurantsRepositoryMock.Setup(r => r.GetAll()).ReturnsAsync(restaurants);
 +
-+        // Action
-+        // We are creating a delegate (function) that represents the asynchronous operation
-+        // * In unit testing, when you want to assert that a method throws an exception, you need to capture the method call in a delegate(a function reference) without executing it immediately.
-+        // * This allows you to pass the method into the assertion framework (like FluentAssertions) to verify that it throws the expected exception when invoked.
-+        // * By wrapping the call in a delegate (Func<Task>), you defer its execution until you're ready to assert on it.
-+        Func<Task> action = async () => await _handler.Handle(command, CancellationToken.None);
++        // Define the requirement: user must have created at least 2 restaurants
++        var requirement = new CreatedMultipleRestaurantsRequirement(2);
++        
++        // Instantiate the handler with the mocked dependencies
++        var handler = new CreatedMultipleRestaurantsRequirementHandler(restaurantsRepositoryMock.Object, userContextMock.Object);
 +
-+        // Assert
-+        await action.Should().ThrowAsync<NotFoundException>().WithMessage($"Restaurant with identifier {restaurantId} does not exist.");
-+    }
-+
-+    // handle with unauthorized access should throw unauthorized access exception
-+    [Fact()]
-+    public async Task Handle_WithUnauthorizedAccess_ShouldThrowForbidException()
-+    {
-+        // Arrange
-+        var restaurantId = 1;
-+        var command = new UpdateRestaurantCommand
-+        {
-+            Id = restaurantId
-+        };
-+
-+        var restaurant = new Restaurant
-+        {
-+            Id = restaurantId
-+        };
-+
-+        _restaurantsRepositoryMock.Setup(r => r.GetById(restaurantId)).ReturnsAsync(restaurant);
-+
-+        _restaurantAuthorizationServiceMock.Setup(r => r.Authorize(restaurant, ResourceOperation.Update)).Returns(false);
++        // Creating AuthorizationHandlerContext with:
++        // - The specific requirement to evaluate.
++        // - null for User because the handler retrieves the current user via IUserContext.
++        // └ in other words, because we have the userContextMock defined above, we don't need to pass in a user. this would be redundant.
++        // - null for Resource as this requirement doesn't pertain to a specific resource.
++        // This setup isolates the handler's logic, focusing solely on whether the user meets the restaurant creation criteria.
++        var context = new AuthorizationHandlerContext(new[] { requirement }, null, null);
 +
 +        // Act
-+        Func<Task> action = async () => await _handler.Handle(command, CancellationToken.None);
++        // Invoke the handler's HandleAsync method to process the authorization
++        await handler.HandleAsync(context);
 +
 +        // Assert
-+        await action.Should().ThrowAsync<ForbidException>();
++        // Verify that the authorization succeeded
++        context.HasSucceeded.Should().BeTrue();
++    }
++
++    [Fact]
++    public async Task HandleRequirementAsync_UserHasNotCreatedMultipleRestaurants_ShouldFailAsync()
++    {
++        // Arrange
++        var currentUser = new CurrentUser("1", "test@test.com", new List<string>(), null, null);
++        var restaurants = new List<Restaurant>
++        {
++            new Restaurant { OwnerId = currentUser.Id },
++            new Restaurant { OwnerId = "2" }
++        };
++
++        var userContextMock = new Mock<IUserContext>();
++        userContextMock.Setup(u => u.GetCurrentUser()).Returns(currentUser);
++
++        var restaurantsRepositoryMock = new Mock<IRestaurantsRepository>();
++        restaurantsRepositoryMock.Setup(r => r.GetAll()).ReturnsAsync(restaurants);
++
++        var requirement = new CreatedMultipleRestaurantsRequirement(2);
++
++        var handler = new CreatedMultipleRestaurantsRequirementHandler(restaurantsRepositoryMock.Object, userContextMock.Object);
++
++        var context = new AuthorizationHandlerContext(new[] { requirement }, null, null);
++
++        // Act
++        await handler.HandleAsync(context);
++
++        // Assert
++        context.HasFailed.Should().BeTrue();
 +    }
 +}
 \ No newline at end of file
-diff --git a/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs b/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs
+diff --git a/Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj b/Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj
 new file mode 100644
-index 0000000..f0e1dbf
+index 0000000..71a964a
 --- /dev/null
-+++ b/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs
-@@ -0,0 +1,118 @@
-+using AutoMapper;
-+using FluentAssertions;
-+using Restaurants.Application.Restaurants.Commands;
-+using Restaurants.Domain.Entities;
-+using Xunit;
++++ b/Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj
+@@ -0,0 +1,31 @@
++<Project Sdk="Microsoft.NET.Sdk">
 +
-+namespace Restaurants.Application.Restaurants.Dtos.Tests;
++  <PropertyGroup>
++    <TargetFramework>net8.0</TargetFramework>
++    <ImplicitUsings>enable</ImplicitUsings>
++    <Nullable>enable</Nullable>
 +
-+public class RestaurantsProfileTests
++    <IsPackable>false</IsPackable>
++    <IsTestProject>true</IsTestProject>
++  </PropertyGroup>
++
++  <ItemGroup>
++    <PackageReference Include="coverlet.collector" Version="6.0.0" />
++    <PackageReference Include="FluentAssertions" Version="6.12.1" />
++    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
++    <PackageReference Include="Moq" Version="4.20.72" />
++    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
++    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
++    <PackageReference Include="xunit" Version="2.6.6" />
++    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7" />    
++  </ItemGroup>
++
++  <ItemGroup>
++    <ProjectReference Include="..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj" />
++  </ItemGroup>  
++
++  <ItemGroup>
++    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
++  </ItemGroup>
++
++</Project>
+diff --git a/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs b/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs
+index f43f67d..1e12862 100644
+--- a/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs
++++ b/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs
+@@ -1,4 +1,6 @@
+ using Microsoft.AspNetCore.Authorization;
++using Restaurants.Application.Users;
++using Restaurants.Domain.Repositories;
+ 
+ namespace Restaurants.Infrastructure.Authorization.Requirements;
+ 
+@@ -6,3 +8,25 @@ public class CreatedMultipleRestaurantsRequirement(int minimumRestaurantsCreated
+ {
+     public int MinimumRestaurantsCreated { get; } = minimumRestaurantsCreated;
+ }
++
++internal class CreatedMultipleRestaurantsRequirementHandler(IRestaurantsRepository restaurantsRepository, IUserContext userContext)
++: AuthorizationHandler<CreatedMultipleRestaurantsRequirement>
 +{
-+    private readonly IMapper _mapper;
-+
-+    public RestaurantsProfileTests()
++    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CreatedMultipleRestaurantsRequirement requirement)
 +    {
-+        var configuration = new MapperConfiguration(cfg => 
++        var currentUser = userContext.GetCurrentUser();
++
++        var restaurants = await restaurantsRepository.GetAll();
++
++        var userRestaurantsCreated = restaurants.Count(r => r.OwnerId == currentUser!.Id);
++
++        if (userRestaurantsCreated >= requirement.MinimumRestaurantsCreated)
 +        {
-+            cfg.AddProfile<RestaurantsProfile>();
-+        });
-+
-+        _mapper = configuration.CreateMapper();
-+    }
-+
-+    [Fact()]
-+    public void CreateMap_ForRestaurantsDto_MapsCorrectly()    
-+    {
-+        // Arrange
-+        var restaurant = new Restaurant
++            context.Succeed(requirement);
++        }
++        else
 +        {
-+            Id = 1,
-+            Name = "Test Restaurant",
-+            Description = "Test Description",
-+            Category = "Test Category",
-+            HasDelivery = true,
-+            ContactEmail = "test@example.com",
-+            ContactNumber = "1234567890",
-+            Address = new Address
-+            {
-+                City = "Test City",
-+                Street = "Test Street",
-+                PostalCode = "123-4567"
-+            }
-+        };  
-+
-+        // Act
-+        var restaurantDto = _mapper.Map<RestaurantDto>(restaurant);
-+
-+        // Assert
-+        restaurantDto.Should().NotBeNull();
-+        restaurantDto.Id.Should().Be(restaurant.Id);
-+        restaurantDto.Name.Should().Be(restaurant.Name);
-+        restaurantDto.Description.Should().Be(restaurant.Description);
-+        restaurantDto.Category.Should().Be(restaurant.Category);
-+        restaurantDto.HasDelivery.Should().Be(restaurant.HasDelivery);
-+        restaurantDto.City.Should().Be(restaurant.Address.City);
-+        restaurantDto.Street.Should().Be(restaurant.Address.Street);
-+        restaurantDto.PostalCode.Should().Be(restaurant.Address.PostalCode);
-+    }
-+
-+    // CreateMap_ForCreateRestaurantsCommandToRestaurant_MapsCorrectly
-+    [Fact()]
-+    public void CreateMap_ForCreateRestaurantsCommandToRestaurant_MapsCorrectly()
-+    {
-+        // Arrange
-+        var command = new CreateRestaurantCommand
-+        {
-+            Name = "Test Restaurant",
-+            Description = "Test Description",
-+            Category = "Test Category",
-+            HasDelivery = true,
-+            ContactEmail = "test@example.com",
-+            ContactNumber = "1234567890",
-+            City = "Test City",
-+            Street = "Test Street",
-+            PostalCode = "123-4567"            
-+        };
-+
-+        // Act
-+        var restaurant = _mapper.Map<Restaurant>(command);
-+
-+        // Assert
-+        restaurant.Should().NotBeNull();
-+        restaurant.Name.Should().Be(command.Name);
-+        restaurant.Description.Should().Be(command.Description);
-+        restaurant.Category.Should().Be(command.Category);
-+        restaurant.HasDelivery.Should().Be(command.HasDelivery);
-+        restaurant.ContactEmail.Should().Be(command.ContactEmail);
-+        restaurant.ContactNumber.Should().Be(command.ContactNumber);
-+        restaurant.Address.Should().NotBeNull();
-+        restaurant.Address.City.Should().Be(command.City);
-+        restaurant.Address.Street.Should().Be(command.Street);
-+        restaurant.Address.PostalCode.Should().Be(command.PostalCode);
-+    }
-+
-+    // update (same as create above)
-+    [Fact()]
-+    public void CreateMap_ForUpdateRestaurantsCommandToRestaurant_MapsCorrectly()
-+    {
-+        // Arrange
-+        var command = new UpdateRestaurantCommand
-+        {
-+            Id = 1,
-+            Name = "Updated Restaurant",
-+            Description = "Updated Description",
-+            HasDelivery = true,
-+        };
-+
-+        // Act
-+        var restaurant = _mapper.Map<Restaurant>(command);
-+
-+        // Assert
-+        restaurant.Should().NotBeNull();
-+        restaurant.Id.Should().Be(command.Id);
-+        restaurant.Name.Should().Be(command.Name);
-+        restaurant.Description.Should().Be(command.Description);
-+        restaurant.HasDelivery.Should().Be(command.HasDelivery);
-+        // * other fields are not mapped, so they should be null
++            context.Fail();
++        }
 +    }
 +}
+diff --git a/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandler.cs b/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandler.cs
+deleted file mode 100644
+index 144cc36..0000000
+--- a/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandler.cs
++++ /dev/null
+@@ -1,30 +0,0 @@
+-using Microsoft.AspNetCore.Authorization;
+-using Restaurants.Application.Users;
+-using Restaurants.Domain.Repositories;
+-
+-namespace Restaurants.Infrastructure.Authorization.Requirements;
+-
+-internal class CreatedMultipleRestaurantsRequirementHandler(
+-    IRestaurantsRepository restaurantsRepository,
+-    IUserContext userContext) : AuthorizationHandler<CreatedMultipleRestaurantsRequirement>
+-{
+-    protected override async Task HandleRequirementAsync(
+-        AuthorizationHandlerContext context,
+-        CreatedMultipleRestaurantsRequirement requirement)
+-    {
+-        var currentUser = userContext.GetCurrentUser();
+-
+-        var restaurants = await restaurantsRepository.GetAll();
+-
+-        var userRestaurantsCreated = restaurants.Count(r => r.OwnerId == currentUser!.Id);
+-
+-        if (userRestaurantsCreated >= requirement.MinimumRestaurantsCreated)
+-        {
+-            context.Succeed(requirement);
+-        }
+-        else
+-        {
+-            context.Fail();
+-        }
+-    }
+-}
+diff --git a/Restaurants.Infrastructure/assembly.cs b/Restaurants.Infrastructure/assembly.cs
+new file mode 100644
+index 0000000..95d5f36
+--- /dev/null
++++ b/Restaurants.Infrastructure/assembly.cs
+@@ -0,0 +1,3 @@
++using System.Runtime.CompilerServices;
++
++[assembly: InternalsVisibleTo("Restaurants.Infrastructure.Tests")]
 \ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
-index 5b07838..a661170 100644
---- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
-+++ b/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
-@@ -44,7 +44,7 @@ public class UpdateRestaurantCommandHandler(ILogger<UpdateRestaurantCommandHandl
-     {
-         logger.LogInformation("Updating restaurant with id: {RestaurantId} with {@UpdatedRestaurant}", request.Id, request);
- 
--        // todo: shouldn't the logic between here and delete be in a transaction, incase someone else trys to update it or something?
-+        // todo: shouldn't the logic between here and delete be in a transaction, incase someone else trs to update it or something?
-         var restaurant = await restaurantsRepository.GetById(request.Id);
- 
-         if (restaurant == null)
