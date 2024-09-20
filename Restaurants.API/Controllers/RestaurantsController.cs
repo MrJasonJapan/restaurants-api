@@ -14,16 +14,6 @@ namespace Restaurants.API.Controllers;
 [Route("api/[controller]")]
 public class RestaurantsController(IMediator mediator) : ControllerBase
 {
-    [HttpPost]
-    [Authorize(Roles = UserRoles.Owner)]
-    // FluentValidator will automatically validate the request because we have scanned the assembly and it knows that CreateRestaurantCommand has a validator.
-    public async Task<IActionResult> CreateRestaurant(CreateRestaurantCommand command)
-    {
-        int id = await mediator.Send(command);
-
-        return CreatedAtAction(nameof(GetById), new { id }, null);
-    }
-
     [HttpGet]
     [AllowAnonymous]
     // [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
@@ -32,6 +22,16 @@ public class RestaurantsController(IMediator mediator) : ControllerBase
         var restaurants = await mediator.Send(query);
 
         return Ok(restaurants);
+    }
+        
+    [HttpPost]
+    [Authorize(Roles = UserRoles.Owner)]
+    // FluentValidator will automatically validate the request because we have scanned the assembly and it knows that CreateRestaurantCommand has a validator.
+    public async Task<IActionResult> CreateRestaurant(CreateRestaurantCommand command)
+    {
+        int id = await mediator.Send(command);
+
+        return CreatedAtAction(nameof(GetById), new { id }, null);
     }
 
     [HttpGet]

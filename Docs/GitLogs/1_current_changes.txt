@@ -1,145 +1,120 @@
-diff --git a/Restaurants.API.Tests/Middleware/ErrorHandlingMiddlewareTests.cs b/Restaurants.API.Tests/Middleware/ErrorHandlingMiddlewareTests.cs
+diff --git a/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs b/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
 new file mode 100644
-index 0000000..61d083a
+index 0000000..36a31d5
 --- /dev/null
-+++ b/Restaurants.API.Tests/Middleware/ErrorHandlingMiddlewareTests.cs
-@@ -0,0 +1,76 @@
-+﻿using FluentAssertions;
-+using Microsoft.AspNetCore.Http;
-+using Microsoft.Extensions.Logging;
-+using Moq;
-+using Restaurants.Domain.Entities;
-+using Restaurants.Domain.Exceptions;
++++ b/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
+@@ -0,0 +1,49 @@
++using System.Net;
++using FluentAssertions;
++using Microsoft.AspNetCore.Mvc.Testing;
 +using Xunit;
 +
-+namespace restaurants_api.Middleware.Tests;
++namespace Restaurants.API.Controllers.Tests;
 +
-+public class ErrorHandlingMiddlewareTests
++public class RestaurantsControllerTests : IClassFixture<WebApplicationFactory<Program>>
 +{
-+    [Fact()]
-+    public async Task InvokeAsync_WhenNoExceptionThrown_ShouldCallNextDelegateAsync()
++    // The term "factory" is used because WebApplicationFactory<Program> sets up a test server 
++    // that mimics the behavior of our actual API application. It effectively "manufactures" 
++    // instances of our API for integration testing purposes.
++    // The factory will also allow us to create a new HttpClient for each test, which is useful for making requests to the API.
++    // * The term "factory" in WebApplicationFactory<Program> is intentionally chosen to reflect its role in
++    // * manufacturing both the test server and the HttpClient instances needed for integration testing.
++    private readonly WebApplicationFactory<Program> _factory;
++
++    public RestaurantsControllerTests(WebApplicationFactory<Program> factory)
 +    {
-+        // Arrange
-+        var loggerMock = new Mock<ILogger<ErrorHandlingMiddleware>>();
-+        var middleware = new ErrorHandlingMiddleware(loggerMock.Object);
-+        var context = new DefaultHttpContext();
-+        var nextDelegateMock = new Mock<RequestDelegate>();
-+
-+        // Action
-+        await middleware.InvokeAsync(context, nextDelegateMock.Object);
-+
-+        // Assert
-+        nextDelegateMock.Verify(next => next.Invoke(context), Times.Once);
++        _factory = factory;
 +    }
 +
 +    [Fact()]
-+    public async Task InvokeAsync_WhenNotFountExceptionThrown_ShouldSetStatusCode404()
++    public async Task GetAll_ForValidRequest_Returns200OkAsync()
 +    {
 +        // Arrange
-+        var loggerMock = new Mock<ILogger<ErrorHandlingMiddleware>>();
-+        var middleware = new ErrorHandlingMiddleware(loggerMock.Object);
-+        var context = new DefaultHttpContext();
-+        var notFoundException = new NotFoundException(nameof(Restaurant), "1");
++        var client = _factory.CreateClient();
 +
-+        // Action
-+        await middleware.InvokeAsync(context, _ => throw notFoundException);
++        // Act
++        var result = await client.GetAsync("/api/restaurants?pageNumber=1&pageSize=10");
 +
 +        // Assert
-+        context.Response.StatusCode.Should().Be(StatusCodes.Status404NotFound);
++        result.StatusCode.Should().Be(HttpStatusCode.OK);
 +    }
 +
-+    [Fact()]
-+    public async Task InvokeAsync_WhenForbidExceptionThrown_ShouldSetStatusCode403()
++    // get all for invalid request return 400 BadRequest
++    [Fact]
++    public async Task GetAll_ForInvalidRequest_Returns400BadRequestAsync()
 +    {
 +        // Arrange
-+        var loggerMock = new Mock<ILogger<ErrorHandlingMiddleware>>();
-+        var middleware = new ErrorHandlingMiddleware(loggerMock.Object);
-+        var context = new DefaultHttpContext();
-+        var forbidException = new ForbidException();
++        var client = _factory.CreateClient();
 +
-+        // Action
-+        await middleware.InvokeAsync(context, _ => throw forbidException);
++        // Act
++        var result = await client.GetAsync("/api/restaurants");
 +
 +        // Assert
-+        context.Response.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
-+    }
-+
-+    [Fact()]
-+    public async Task InvokeAsync_WhenGenericExceptionThrown_ShouldSetStatusCode500()
-+    {
-+        // Arrange
-+        var loggerMock = new Mock<ILogger<ErrorHandlingMiddleware>>();
-+        var middleware = new ErrorHandlingMiddleware(loggerMock.Object);
-+        var context = new DefaultHttpContext();
-+        var exception = new Exception();
-+
-+        // Action
-+        await middleware.InvokeAsync(context, _ => throw exception);
-+
-+        // Assert
-+        context.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-+    }
++        result.StatusCode.Should().Be(HttpStatusCode.BadRequest);        
++    }   
 +}
 \ No newline at end of file
 diff --git a/Restaurants.API.Tests/Restaurants.API.Tests.csproj b/Restaurants.API.Tests/Restaurants.API.Tests.csproj
-new file mode 100644
-index 0000000..5dc649d
---- /dev/null
+index 5dc649d..f1fbefd 100644
+--- a/Restaurants.API.Tests/Restaurants.API.Tests.csproj
 +++ b/Restaurants.API.Tests/Restaurants.API.Tests.csproj
-@@ -0,0 +1,32 @@
-+<Project Sdk="Microsoft.NET.Sdk">
+@@ -12,6 +12,7 @@
+   <ItemGroup>
+     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+     <PackageReference Include="FluentAssertions" Version="6.12.1" />
++    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.8" />
+     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+     <PackageReference Include="Moq" Version="4.20.72" />
+     <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+diff --git a/Restaurants.API/Controllers/RestaurantsController.cs b/Restaurants.API/Controllers/RestaurantsController.cs
+index 8ea33b4..2eb5c85 100644
+--- a/Restaurants.API/Controllers/RestaurantsController.cs
++++ b/Restaurants.API/Controllers/RestaurantsController.cs
+@@ -14,16 +14,6 @@ namespace Restaurants.API.Controllers;
+ [Route("api/[controller]")]
+ public class RestaurantsController(IMediator mediator) : ControllerBase
+ {
+-    [HttpPost]
+-    [Authorize(Roles = UserRoles.Owner)]
+-    // FluentValidator will automatically validate the request because we have scanned the assembly and it knows that CreateRestaurantCommand has a validator.
+-    public async Task<IActionResult> CreateRestaurant(CreateRestaurantCommand command)
+-    {
+-        int id = await mediator.Send(command);
+-
+-        return CreatedAtAction(nameof(GetById), new { id }, null);
+-    }
+-
+     [HttpGet]
+     [AllowAnonymous]
+     // [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
+@@ -33,6 +23,16 @@ public class RestaurantsController(IMediator mediator) : ControllerBase
+ 
+         return Ok(restaurants);
+     }
++        
++    [HttpPost]
++    [Authorize(Roles = UserRoles.Owner)]
++    // FluentValidator will automatically validate the request because we have scanned the assembly and it knows that CreateRestaurantCommand has a validator.
++    public async Task<IActionResult> CreateRestaurant(CreateRestaurantCommand command)
++    {
++        int id = await mediator.Send(command);
 +
-+  <PropertyGroup>
-+    <TargetFramework>net8.0</TargetFramework>
-+    <ImplicitUsings>enable</ImplicitUsings>
-+    <Nullable>enable</Nullable>
++        return CreatedAtAction(nameof(GetById), new { id }, null);
++    }
+ 
+     [HttpGet]
+     [Route("{id}")]
+diff --git a/Restaurants.API/Program.cs b/Restaurants.API/Program.cs
+index 4b5171b..b4f7d4b 100644
+--- a/Restaurants.API/Program.cs
++++ b/Restaurants.API/Program.cs
+@@ -60,3 +60,9 @@ app.UseAuthorization();
+ app.MapControllers();
+ 
+ app.Run();
 +
-+    <IsPackable>false</IsPackable>
-+    <IsTestProject>true</IsTestProject>
-+  </PropertyGroup>
 +
-+  <ItemGroup>
-+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-+    <PackageReference Include="FluentAssertions" Version="6.12.1" />
-+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-+    <PackageReference Include="Moq" Version="4.20.72" />
-+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
-+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
-+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-+    <PackageReference Include="xunit" Version="2.6.6" />
-+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.7" />
-+  </ItemGroup>
 +
-+  <ItemGroup>
-+    <ProjectReference Include="..\Restaurants.API\Restaurants.API.csproj" />
-+  </ItemGroup>
-+
-+  <ItemGroup>
-+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
-+  </ItemGroup>
-+
-+</Project>
-diff --git a/Restaurants.API/Restaurants.API.sln b/Restaurants.API/Restaurants.API.sln
-index 40082b4..998adfe 100644
---- a/Restaurants.API/Restaurants.API.sln
-+++ b/Restaurants.API/Restaurants.API.sln
-@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application.Tes
- EndProject
- Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Infrastructure.Tests", "..\Restaurants.Infrastructure.Tests\Restaurants.Infrastructure.Tests.csproj", "{92729516-8C33-4F2C-A93D-FF4DCA030B03}"
- EndProject
-+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.API.Tests", "..\Restaurants.API.Tests\Restaurants.API.Tests.csproj", "{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}"
-+EndProject
- Global
- 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
- 		Debug|Any CPU = Debug|Any CPU
-@@ -45,6 +47,10 @@ Global
- 		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Debug|Any CPU.Build.0 = Debug|Any CPU
- 		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Release|Any CPU.ActiveCfg = Release|Any CPU
- 		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Release|Any CPU.Build.0 = Release|Any CPU
-+		{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-+		{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-+		{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-+		{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}.Release|Any CPU.Build.0 = Release|Any CPU
- 	EndGlobalSection
- 	GlobalSection(SolutionProperties) = preSolution
- 		HideSolutionNode = FALSE
++// This is required for the WebApplicationFactory in our tests to be able to build the app.
++// partial means that this file is a partial class, and we can add more code to it in other files.
++public partial class Program { }

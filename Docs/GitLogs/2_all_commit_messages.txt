@@ -1,3 +1,27 @@
+commit fda23924fee161198fbf0ef21176499594a8d469
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Sat Sep 21 00:22:36 2024 +0900
+
+    Add Unit Tests for ErrorHandlingMiddleware and Create Restaurants.API.Tests Project
+    
+    - Created new project 'Restaurants.API.Tests' for unit testing the API layer.
+    - Implemented ErrorHandlingMiddlewareTests:
+      - Added test for successful scenario where no exception is thrown.
+      - Added test for handling NotFoundException, ensuring 404 status code is set.
+      - Added test for handling ForbidException, ensuring 403 status code is set.
+      - Added test for handling generic exceptions, ensuring 500 status code is set.
+    - Updated Restaurants.API.Tests.csproj:
+      - Added necessary package references for testing, including FluentAssertions, Moq, MSTest, xunit, and Newtonsoft.Json.
+      - Set up project reference to Restaurants.API.
+    - Updated Restaurants.API.sln to include the new Restaurants.API.Tests project.
+    
+    These changes enhance the testability of the API layer, particularly focusing on
+    error handling middleware. The addition of unit tests for the ErrorHandlingMiddleware
+    improves the reliability of the error handling logic, covering various scenarios
+    including successful requests, not found errors, forbidden access, and generic exceptions.
+    This commit continues the trend of improving test coverage across the application,
+    following the recent additions of tests for the Application and Infrastructure layers.
+
 commit 14ef13408f950dfc046e929f37eb672cef9e6cfc
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Fri Sep 20 22:37:52 2024 +0900

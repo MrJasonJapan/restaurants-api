@@ -60,3 +60,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+
+// This is required for the WebApplicationFactory in our tests to be able to build the app.
+// partial means that this file is a partial class, and we can add more code to it in other files.
+public partial class Program { }
