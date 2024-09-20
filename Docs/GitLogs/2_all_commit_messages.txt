@@ -1,3 +1,29 @@
+commit b0784c59d35bc405f71c765afefe541c48485a34
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Fri Sep 20 00:11:42 2024 +0900
+
+    Refactor Command Structure and Add Unit Tests for CreateRestaurantCommand Validation
+    
+    - Consolidated CreateRestaurant-related files into a single file:
+      - Moved CreateRestaurantCommand, CreateRestaurantCommandValidator, and CreateRestaurantCommandHandler into CreateRestaurantCommand.cs.
+      - Updated namespace to Restaurants.Application.Restaurants.Commands.
+    
+    - Implemented similar consolidation for UpdateRestaurant and DeleteRestaurant commands.
+    
+    - Created new unit tests for CreateRestaurantCommandValidator:
+      - Added CreateRestaurantCommandValidatorTests.cs in the Restaurants.Application.Tests project.
+      - Implemented tests for valid and invalid CreateRestaurantCommand scenarios.
+      - Added theory-based tests for validating categories and postal codes.
+    
+    - Updated import statements in affected files to reflect new command structure.
+    
+    - Adjusted RestaurantsProfile to use the new command namespace.
+    
+    These changes improve code organization by grouping related command classes together,
+    making the codebase more maintainable. The addition of unit tests for the CreateRestaurantCommandValidator
+    enhances the reliability of the validation logic, covering various scenarios including
+    valid inputs, invalid inputs, and specific validations for categories and postal codes.
+
 commit 54d8a2f65f65dd544a4cbbef77bfbaebb31bdffc
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Thu Sep 19 21:29:31 2024 +0900

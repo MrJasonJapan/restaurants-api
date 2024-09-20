@@ -44,7 +44,7 @@ public class UpdateRestaurantCommandHandler(ILogger<UpdateRestaurantCommandHandl
     {
         logger.LogInformation("Updating restaurant with id: {RestaurantId} with {@UpdatedRestaurant}", request.Id, request);
 
-        // todo: shouldn't the logic between here and delete be in a transaction, incase someone else trys to update it or something?
+        // todo: shouldn't the logic between here and delete be in a transaction, incase someone else trs to update it or something?
         var restaurant = await restaurantsRepository.GetById(request.Id);
 
         if (restaurant == null)

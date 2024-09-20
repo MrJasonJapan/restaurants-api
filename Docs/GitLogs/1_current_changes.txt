@@ -1,605 +1,350 @@
-diff --git a/Restaurants.API/Controllers/IdentityController.cs b/Restaurants.API/Controllers/IdentityController.cs
-index 28ca4db..3648974 100644
---- a/Restaurants.API/Controllers/IdentityController.cs
-+++ b/Restaurants.API/Controllers/IdentityController.cs
-@@ -1,9 +1,7 @@
- using MediatR;
- using Microsoft.AspNetCore.Authorization;
- using Microsoft.AspNetCore.Mvc;
--using Restaurants.Application.Users.Commands.AssignUserRole;
--using Restaurants.Application.Users.Commands.UnassignUserRole;
--using Restaurants.Application.Users.UpdateUserDetails.Commands;
-+using Restaurants.Application.Users.Commands;
- using Restaurants.Domain.Constants;
- 
- namespace restaurants_api.Controllers;
-diff --git a/Restaurants.API/Controllers/RestaurantsController.cs b/Restaurants.API/Controllers/RestaurantsController.cs
-index 9d8a7d7..8ea33b4 100644
---- a/Restaurants.API/Controllers/RestaurantsController.cs
-+++ b/Restaurants.API/Controllers/RestaurantsController.cs
-@@ -1,8 +1,6 @@
- using Microsoft.AspNetCore.Mvc;
- using MediatR;
--using Restaurants.Application.Commands.UpdateRestaurant;
--using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
--using Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
-+using Restaurants.Application.Restaurants.Commands;
- using Restaurants.Application.Restaurants.Queries;
- using Restaurants.Application.Restaurants.Dtos;
- using Microsoft.AspNetCore.Authorization;
-diff --git a/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs b/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs
+diff --git a/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs b/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs
 new file mode 100644
-index 0000000..e716858
+index 0000000..cce113a
 --- /dev/null
-+++ b/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs
-@@ -0,0 +1,94 @@
-+using FluentValidation.TestHelper;
-+using Restaurants.Application.Restaurants.Commands;
++++ b/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs
+@@ -0,0 +1,77 @@
++using AutoMapper;
++using FluentAssertions;
++using Microsoft.Extensions.Logging;
++using Moq;
++using Restaurants.Application.Users;
++using Restaurants.Domain.Entities;
++using Restaurants.Domain.Interfaces;
++using Restaurants.Domain.Repositories;
++using Restaurants.Domains.Constants;
++using restaurants_api.Application.Users;
 +using Xunit;
 +
-+namespace Restaurants.Application.Tests.Restaurants.Commands;
++namespace Restaurants.Application.Restaurants.Commands.Tests;
 +
-+public class CreateRestaurantCommandValidatorTests
++public class CreateRestaurantCommandHandlerTests
 +{
 +    [Fact]
-+    public void Validator_ForValidCommand_ShouldNotHaveValidationErrors()
++    public async Task Handle_ForValidCommand_ShouldReturnCreatedRestaurantIdAsync()
 +    {
 +        // Arrange
-+        var command = new CreateRestaurantCommand()
-+        {
-+            Name = "Test",
-+            Description = "Test",
-+            Category = "Italian",
-+            ContactEmail = "contact@example.com",
-+            PostalCode = "123-4567",
-+        };
 +
-+        var validator = new CreateRestaurantCommandValidator();
++        // Mock the logger dependency
++        var loggerMock = new Mock<ILogger<CreateRestaurantCommandHandler>>();
 +
-+        // Act
-+        var result = validator.TestValidate(command);
++        // Mock the mapper dependency and set up its behavior
++        var mapperMock = new Mock<IMapper>();
++        var command = new CreateRestaurantCommand();
++        var restaurant = new Restaurant();
++        mapperMock.Setup(mapper => mapper.Map<Restaurant>(command)).Returns(restaurant);
 +
-+        // Assert
-+        result.ShouldNotHaveAnyValidationErrors();
-+    }
++        // Mock the repository dependency and set up its behavior
++        var restaurantsRepositoryMock = new Mock<IRestaurantsRepository>();
++        restaurantsRepositoryMock.Setup(repo => repo.Create(It.IsAny<Restaurant>())).ReturnsAsync(1);
 +
-+    [Fact]
-+    public void Validator_ForInvalidCommand_ShouldHaveValidationErrors()
-+    {
-+        // Arrange
-+        var command = new CreateRestaurantCommand()
-+        {
-+            Name = "Te",
-+            Description = "",
-+            Category = "Itazzz",
-+            ContactEmail = "@example.com",
-+            PostalCode = "1234567",
-+        };
++        // Mock the authorization service and set it to authorize the operation
++        var restaurantAuthorizationServiceMock = new Mock<IRestaurantAuthorizationService>();
++        restaurantAuthorizationServiceMock
++            .Setup(service => service.Authorize(It.IsAny<Restaurant>(), ResourceOperation.Create))
++            .Returns(true);
 +
-+        var validator = new CreateRestaurantCommandValidator();
++        // Mock the user context and set up the current user
++        var userContextMock = new Mock<IUserContext>();
++        var currentUser = new CurrentUser("owner-id", "test@test.com", new List<string>(), null, null);
++        userContextMock.Setup(context => context.GetCurrentUser()).Returns(currentUser);
 +
-+        // Act
-+        var result = validator.TestValidate(command);
-+
-+        // Assert
-+        result.ShouldHaveValidationErrorFor(c => c.Name);
-+        result.ShouldHaveValidationErrorFor(c => c.Description);
-+        result.ShouldHaveValidationErrorFor(c => c.Category);
-+        result.ShouldHaveValidationErrorFor(c => c.ContactEmail);
-+        result.ShouldHaveValidationErrorFor(c => c.PostalCode);
-+    }
-+
-+    [Theory]
-+    [InlineData("Italian")]
-+    [InlineData("Mexican")]
-+    [InlineData("Japanese")]
-+    [InlineData("American")]
-+    [InlineData("Indian")]
-+    public void Validator_ForValidCategory_ShouldNotHaveValidationError(string category)
-+    {
-+        // Arrange
-+        var validator = new CreateRestaurantCommandValidator();
-+        var command = new CreateRestaurantCommand { Category = category };
++        // Create an instance of the handler with mocked dependencies
++        // Note: We are testing the actual implementation of CreateRestaurantCommandHandler
++        // * Testing the Implementation: You are testing the real implementation of CreateRestaurantCommandHandler.
++        // * The handler's code is executed as it would be in production.
++        // * Mocking Dependencies: By mocking dependencies like ILogger, IMapper, IRestaurantsRepository, IRestaurantAuthorizationService,
++        // * and IUserContext, you control their outputs and interactions.
++        // * This isolation ensures that any test failures are due to issues in the handler itself, not in external services.
++        var commandHandler = new CreateRestaurantCommandHandler(
++            loggerMock.Object,
++            mapperMock.Object,
++            restaurantsRepositoryMock.Object,
++            restaurantAuthorizationServiceMock.Object,
++            userContextMock.Object
++        );
 +
 +        // Act
-+        var result = validator.TestValidate(command);
++
++        // Call the Handle method to test the handler's logic
++        var result = await commandHandler.Handle(command, CancellationToken.None);
 +
 +        // Assert
-+        result.ShouldNotHaveValidationErrorFor(c => c.Category);    
-+    }
 +
++        // Verify that the handler returns the expected restaurant ID
++        result.Should().Be(1);
 +
++        // Verify that the restaurant's OwnerId is set correctly
++        restaurant.OwnerId.Should().Be("owner-id");
 +
-+    [Theory] // invalid postal codes
-+    [InlineData("123456")]
-+    [InlineData("12345-678")]
-+    [InlineData("1234-5678")]
-+    public void Validator_ForInvalidPostalCode_ShouldHaveValidationError(string postalCode)
-+    {
-+        // Arrange
-+        var validator = new CreateRestaurantCommandValidator();
-+        var command = new CreateRestaurantCommand { PostalCode = postalCode };
-+
-+        // Act
-+        var result = validator.TestValidate(command);
-+
-+        // Assert
-+        result.ShouldHaveValidationErrorFor(c => c.PostalCode);
++        // Verify that the repository's Create method was called once with the correct restaurant
++        restaurantsRepositoryMock.Verify(repo => repo.Create(restaurant), Times.Once);
 +    }
 +}
-diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommand.cs
-deleted file mode 100644
-index 204eee9..0000000
---- a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommand.cs
-+++ /dev/null
-@@ -1,25 +0,0 @@
--using MediatR;
--
--namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
--
--public class CreateRestaurantCommand : IRequest<int>
--{
--    public string Name { get; set; } = default!;
--
--    public string Description { get; set; } = default!;
--
--    public string Category { get; set; } = default!;
--
--    public bool HasDelivery { get; set; }
--
--    public string? ContactEmail { get; set; }
--
--    public string? ContactNumber { get; set; }
--
--    public string? City { get; set; }
--
--    public string? Street { get; set; }
--
--    public string? PostalCode { get; set; }
--}
--
-diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs
-deleted file mode 100644
-index 01359e8..0000000
---- a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandHandler.cs
-+++ /dev/null
-@@ -1,40 +0,0 @@
--using AutoMapper;
--using MediatR;
--using Microsoft.Extensions.Logging;
--using Restaurants.Application.Users;
--using Restaurants.Domain.Entities;
--using Restaurants.Domain.Exceptions;
--using Restaurants.Domain.Interfaces;
--using Restaurants.Domain.Repositories;
--using Restaurants.Domains.Constants;
--
--namespace Restaurants.Application.Restaurants.Commands.CreateRestaurant;
--
--// handler class
--public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandler> logger,
--    IMapper mapper,
--    IRestaurantsRepository restaurantsRepository,
--    IRestaurantAuthorizationService restaurantAuthorizationService,
--    IUserContext userContext)
--    : IRequestHandler<CreateRestaurantCommand, int>
--{
--    public async Task<int> Handle(CreateRestaurantCommand request, CancellationToken cancellationToken)
--    {
--        var currentUser = userContext.GetCurrentUser();
--
--        logger.LogInformation("{UserEmail} [{UserId}] is creating a new restaurant {@Restaurant}",
--            currentUser.Email,
--            currentUser.Id,
--            request);
--
--        var restaurant = mapper.Map<Restaurant>(request);
--        restaurant.OwnerId = currentUser.Id;
--
--        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Create))
--            throw new ForbidException();
--
--        int id = await restaurantsRepository.Create(restaurant);
--
--        return id;
--    }
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandValidator.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandValidator.cs
-deleted file mode 100644
-index b05d24a..0000000
---- a/Restaurants.Application/Restaurants/Commands/CreateRestaurant/CreateRestaurantCommandValidator.cs
-+++ /dev/null
-@@ -1,34 +0,0 @@
--using FluentValidation;
--using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
--
--namespace Restaurants.Application.Restaurants.Validators;
--
--// An "Abastract" class is a class that cannot be instantiated on its own, but can be inherited by other classes.
--// This can be beneficial when you want to create a class that should not be instantiated, but should be inherited by other classes.
--public class CreateRestaurantCommandValidator : AbstractValidator<CreateRestaurantCommand>
--{
--
--    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
--
--    public CreateRestaurantCommandValidator()
--    {
--        RuleFor(dto => dto.Name)
--            .Length(3, 100);
--
--        RuleFor(dto => dto.Description)
--            .NotEmpty()
--            .WithMessage("Description may not be empty");
--
--        RuleFor(dto => dto.Category)
--            .Must(validCategories.Contains)
--            .WithMessage("Invalid category. Please choose from the valid categories.");
--
--        RuleFor(dto => dto.ContactEmail)
--            .EmailAddress().When(dto => dto.ContactEmail != null)
--            .WithMessage("Invalid email address");
--
--        RuleFor(dto => dto.PostalCode)
--            .Matches(@"^\d{3}-\d{4}$").When(dto => dto.PostalCode != null)
--            .WithMessage("Invalid postal code. Please use the format (XXX-XXXX).");
--    }
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs
+diff --git a/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs b/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs
 new file mode 100644
-index 0000000..4145400
+index 0000000..b5bba5a
 --- /dev/null
-+++ b/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs
-@@ -0,0 +1,84 @@
++++ b/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs
+@@ -0,0 +1,122 @@
 +using AutoMapper;
-+using FluentValidation;
-+using MediatR;
++using FluentAssertions;
 +using Microsoft.Extensions.Logging;
++using Moq;
 +using Restaurants.Application.Users;
 +using Restaurants.Domain.Entities;
 +using Restaurants.Domain.Exceptions;
 +using Restaurants.Domain.Interfaces;
 +using Restaurants.Domain.Repositories;
 +using Restaurants.Domains.Constants;
++using Xunit;
 +
-+namespace Restaurants.Application.Restaurants.Commands;
++namespace Restaurants.Application.Restaurants.Commands.Tests;
 +
-+public class CreateRestaurantCommand : IRequest<int>
++public class UpdateRestaurantCommandHandlerTests
 +{
-+    public string Name { get; set; } = default!;
-+    public string Description { get; set; } = default!;
-+    public string Category { get; set; } = default!;
-+    public bool HasDelivery { get; set; }
-+    public string? ContactEmail { get; set; }
-+    public string? ContactNumber { get; set; }
-+    public string? City { get; set; }
-+    public string? Street { get; set; }
-+    public string? PostalCode { get; set; }
-+}
++    private readonly Mock<ILogger<UpdateRestaurantCommandHandler>> _loggerMock;
++    private readonly Mock<IRestaurantsRepository> _restaurantsRepositoryMock;
++    private readonly Mock<IMapper> _mapperMock;
++    private readonly Mock<IRestaurantAuthorizationService> _restaurantAuthorizationServiceMock;
 +
-+// An "Abastract" class is a class that cannot be instantiated on its own, but can be inherited by other classes.
-+// This can be beneficial when you want to create a class that should not be instantiated, but should be inherited by other classes.
-+public class CreateRestaurantCommandValidator : AbstractValidator<CreateRestaurantCommand>
-+{
++    private readonly UpdateRestaurantCommandHandler _handler;
 +
-+    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
-+
-+    public CreateRestaurantCommandValidator()
++    public UpdateRestaurantCommandHandlerTests()
 +    {
-+        RuleFor(dto => dto.Name)
-+            .Length(3, 100);
++        _loggerMock = new Mock<ILogger<UpdateRestaurantCommandHandler>>();
++        _restaurantsRepositoryMock = new Mock<IRestaurantsRepository>();
++        _mapperMock = new Mock<IMapper>();
++        _restaurantAuthorizationServiceMock = new Mock<IRestaurantAuthorizationService>();
 +
-+        RuleFor(dto => dto.Description)
-+            .NotEmpty()
-+            .WithMessage("Description may not be empty");
-+
-+        RuleFor(dto => dto.Category)
-+            .Must(validCategories.Contains)
-+            .WithMessage("Invalid category. Please choose from the valid categories.");
-+
-+        RuleFor(dto => dto.ContactEmail)
-+            .EmailAddress().When(dto => dto.ContactEmail != null)
-+            .WithMessage("Invalid email address");
-+
-+        RuleFor(dto => dto.PostalCode)
-+            .Matches(@"^\d{3}-\d{4}$").When(dto => dto.PostalCode != null)
-+            .WithMessage("Invalid postal code. Please use the format (XXX-XXXX).");
++        _handler = new UpdateRestaurantCommandHandler(
++            _loggerMock.Object,
++            _mapperMock.Object,
++            _restaurantAuthorizationServiceMock.Object,
++            _restaurantsRepositoryMock.Object);
 +    }
-+}
 +
-+// handler class
-+public class CreateRestaurantCommandHandler(ILogger<CreateRestaurantCommandHandler> logger,
-+    IMapper mapper,
-+    IRestaurantsRepository restaurantsRepository,
-+    IRestaurantAuthorizationService restaurantAuthorizationService,
-+    IUserContext userContext)
-+    : IRequestHandler<CreateRestaurantCommand, int>
-+{
-+    public async Task<int> Handle(CreateRestaurantCommand request, CancellationToken cancellationToken)
++    // continue here.
++    // hande with valid request should update restaurant
++    [Fact()]
++    public async Task Handle_WithValidRequest_ShouldUpdateRestaurant()
 +    {
-+        var currentUser = userContext.GetCurrentUser();
++        // Arrange
++        var restaurantId = 1;
++        var command = new UpdateRestaurantCommand
++        {
++            Id = restaurantId,
++            Name = "Updated Restaurant",
++            Description = "Updated Description",
++            HasDelivery = true
++        };
 +
-+        logger.LogInformation("{UserEmail} [{UserId}] is creating a new restaurant {@Restaurant}",
-+            currentUser.Email,
-+            currentUser.Id,
-+            request);
++        var restaurant = new Restaurant
++        {
++            Id = restaurantId,
++            Name = "Original Restaurant",
++            Description = "Original Description",
++        };
 +
-+        var restaurant = mapper.Map<Restaurant>(request);
-+        restaurant.OwnerId = currentUser.Id;
++        _restaurantsRepositoryMock.Setup(r => r.GetById(restaurantId)).ReturnsAsync(restaurant);
 +
-+        if (!restaurantAuthorizationService.Authorize(restaurant, ResourceOperation.Create))
-+            throw new ForbidException();
++        _restaurantAuthorizationServiceMock.Setup(r => r.Authorize(restaurant, ResourceOperation.Update)).Returns(true);
++        
++        // Act
++        await _handler.Handle(command, CancellationToken.None);
 +
-+        int id = await restaurantsRepository.Create(restaurant);
++        // Assert
++        _restaurantsRepositoryMock.Verify(r => r.SaveChanges(), Times.Once);
++        _mapperMock.Verify(m => m.Map(command, restaurant), Times.Once);
++    }
 +
-+        return id;
++    // handle with non existing restaurant should throw not found exception
++    [Fact()]
++    public async Task Handle_WithNonExistingRestaurant_ShouldThrowNotFoundException()
++    {
++        // Arrange
++        var restaurantId = 1;
++        var command = new UpdateRestaurantCommand
++        {
++            Id = restaurantId
++        };
++
++        _restaurantsRepositoryMock.Setup(r => r.GetById(restaurantId)).ReturnsAsync((Restaurant?)null);
++
++        // Action
++        // We are creating a delegate (function) that represents the asynchronous operation
++        // * In unit testing, when you want to assert that a method throws an exception, you need to capture the method call in a delegate(a function reference) without executing it immediately.
++        // * This allows you to pass the method into the assertion framework (like FluentAssertions) to verify that it throws the expected exception when invoked.
++        // * By wrapping the call in a delegate (Func<Task>), you defer its execution until you're ready to assert on it.
++        Func<Task> action = async () => await _handler.Handle(command, CancellationToken.None);
++
++        // Assert
++        await action.Should().ThrowAsync<NotFoundException>().WithMessage($"Restaurant with identifier {restaurantId} does not exist.");
++    }
++
++    // handle with unauthorized access should throw unauthorized access exception
++    [Fact()]
++    public async Task Handle_WithUnauthorizedAccess_ShouldThrowForbidException()
++    {
++        // Arrange
++        var restaurantId = 1;
++        var command = new UpdateRestaurantCommand
++        {
++            Id = restaurantId
++        };
++
++        var restaurant = new Restaurant
++        {
++            Id = restaurantId
++        };
++
++        _restaurantsRepositoryMock.Setup(r => r.GetById(restaurantId)).ReturnsAsync(restaurant);
++
++        _restaurantAuthorizationServiceMock.Setup(r => r.Authorize(restaurant, ResourceOperation.Update)).Returns(false);
++
++        // Act
++        Func<Task> action = async () => await _handler.Handle(command, CancellationToken.None);
++
++        // Assert
++        await action.Should().ThrowAsync<ForbidException>();
 +    }
 +}
 \ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommand.cs
-deleted file mode 100644
-index 779888b..0000000
---- a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommand.cs
-+++ /dev/null
-@@ -1,9 +0,0 @@
--using MediatR;
--
--namespace Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
--
--public class DeleteRestaurantCommand(int id) : IRequest
--{
--    public int Id { get; set; } = id;
--}
--
-diff --git a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
-similarity index 88%
-rename from Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs
-rename to Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
-index 0ca7563..6a8619d 100644
---- a/Restaurants.Application/Restaurants/Commands/DeleteRestaurant/DeleteRestaurantCommandHandler.cs
-+++ b/Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
-@@ -6,7 +6,12 @@ using Restaurants.Domain.Interfaces;
- using Restaurants.Domain.Repositories;
- using Restaurants.Domains.Constants;
- 
--namespace Restaurants.Application.Restaurants.Commands.DeleteRestaurant;
-+namespace Restaurants.Application.Restaurants.Commands;
-+
-+public class DeleteRestaurantCommand(int id) : IRequest
-+{
-+    public int Id { get; set; } = id;
-+}
- 
- public class DeleteRestaurantCommandHandler(ILogger<DeleteRestaurantCommandHandler> logger,
-     IRestaurantsRepository restaurantsRepository,
-diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommand.cs
-deleted file mode 100644
-index 7fb90f7..0000000
---- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommand.cs
-+++ /dev/null
-@@ -1,15 +0,0 @@
--using MediatR;
--
--namespace Restaurants.Application.Commands.UpdateRestaurant;
--
--public class UpdateRestaurantCommand : IRequest
--{
--    public int Id { get; set; }
--
--    public string Name { get; set; } = default!;
--
--    public string Description { get; set; } = default!;
--
--    public bool HasDelivery { get; set; }
--}
--
-diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandValidator.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandValidator.cs
-deleted file mode 100644
-index 070ab6c..0000000
---- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandValidator.cs
-+++ /dev/null
-@@ -1,19 +0,0 @@
--using FluentValidation;
--using Restaurants.Application.Commands.UpdateRestaurant;
--
--namespace Restaurants.Application.Restaurants.Commands.UpdateRestaurant;
--
--public class UpdateRestaurantCommandValidator : AbstractValidator<UpdateRestaurantCommand>
--{
--    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
--
--    public UpdateRestaurantCommandValidator()
--    {
--        RuleFor(dto => dto.Name)
--            .Length(3, 100);
--
--        RuleFor(dto => dto.Description)
--            .NotEmpty()
--            .WithMessage("Description may not be empty");
--    }
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
-similarity index 63%
-rename from Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs
-rename to Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
-index 98e85a1..5b07838 100644
---- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurant/UpdateRestaurantCommandHandler.cs
-+++ b/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
-@@ -1,14 +1,40 @@
- using AutoMapper;
-+using FluentValidation;
- using MediatR;
- using Microsoft.Extensions.Logging;
--using Restaurants.Application.Commands.UpdateRestaurant;
- using Restaurants.Domain.Entities;
- using Restaurants.Domain.Exceptions;
- using Restaurants.Domain.Interfaces;
- using Restaurants.Domain.Repositories;
- using Restaurants.Domains.Constants;
- 
--namespace Restaurants.Application.Restaurants.Commands.UpdateRestaurant;
-+namespace Restaurants.Application.Restaurants.Commands;
-+
-+public class UpdateRestaurantCommand : IRequest
-+{
-+    public int Id { get; set; }
-+
-+    public string Name { get; set; } = default!;
-+
-+    public string Description { get; set; } = default!;
-+
-+    public bool HasDelivery { get; set; }
-+}
-+
-+public class UpdateRestaurantCommandValidator : AbstractValidator<UpdateRestaurantCommand>
-+{
-+    private readonly List<string> validCategories = ["Italian", "Mexican", "Japanese", "American", "Indian"];
-+
-+    public UpdateRestaurantCommandValidator()
-+    {
-+        RuleFor(dto => dto.Name)
-+            .Length(3, 100);
-+
-+        RuleFor(dto => dto.Description)
-+            .NotEmpty()
-+            .WithMessage("Description may not be empty");
-+    }
-+}
- 
- public class UpdateRestaurantCommandHandler(ILogger<UpdateRestaurantCommandHandler> logger, IMapper mapper,
-     IRestaurantAuthorizationService restaurantAuthorizationService,
-diff --git a/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs b/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
-index 0d3a5c8..019f0e6 100644
---- a/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
-+++ b/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
-@@ -1,6 +1,5 @@
- using AutoMapper;
--using Restaurants.Application.Commands.UpdateRestaurant;
--using Restaurants.Application.Restaurants.Commands.CreateRestaurant;
+diff --git a/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs b/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs
+new file mode 100644
+index 0000000..f0e1dbf
+--- /dev/null
++++ b/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs
+@@ -0,0 +1,118 @@
++using AutoMapper;
++using FluentAssertions;
 +using Restaurants.Application.Restaurants.Commands;
- using Restaurants.Domain.Entities;
- 
- namespace Restaurants.Application.Restaurants.Dtos;
-diff --git a/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommand.cs b/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommand.cs
-deleted file mode 100644
-index 6aa433f..0000000
---- a/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommand.cs
-+++ /dev/null
-@@ -1,10 +0,0 @@
--using MediatR;
--
--namespace Restaurants.Application.Users.Commands.AssignUserRole;
--
--public class AssignUserRoleCommand : IRequest
--{
--    public string UserEmail { get; set; } = default!;
--
--    public string RoleName { get; set; } = default!;
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommandHandler.cs b/Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
-similarity index 85%
-rename from Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommandHandler.cs
-rename to Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
-index 657fffa..6b21fc3 100644
---- a/Restaurants.Application/Users/Commands/AssignUserRole/AssignUserRoleCommandHandler.cs
-+++ b/Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
-@@ -1,11 +1,16 @@
- using MediatR;
- using Microsoft.AspNetCore.Identity;
- using Microsoft.Extensions.Logging;
--using Restaurants.Application.Users.UpdateUserDetails.Commands;
- using Restaurants.Domain.Entities;
- using Restaurants.Domain.Exceptions;
- 
--namespace Restaurants.Application.Users.Commands.AssignUserRole;
-+namespace Restaurants.Application.Users.Commands;
++using Restaurants.Domain.Entities;
++using Xunit;
 +
-+public class AssignUserRoleCommand : IRequest
-+{
-+    public string UserEmail { get; set; } = default!;
-+    public string RoleName { get; set; } = default!;
-+}
- 
- public class AssignUserRoleCommandHandler(
-     ILogger<AssignUserRoleCommandHandler> logger,
-diff --git a/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommandHandler.cs b/Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
-similarity index 83%
-rename from Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommandHandler.cs
-rename to Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
-index aa66206..d5c8d48 100644
---- a/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommandHandler.cs
-+++ b/Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
-@@ -4,7 +4,13 @@ using Microsoft.Extensions.Logging;
- using Restaurants.Domain.Entities;
- using Restaurants.Domain.Exceptions;
- 
--namespace Restaurants.Application.Users.Commands.UnassignUserRole;
-+namespace Restaurants.Application.Users.Commands;
++namespace Restaurants.Application.Restaurants.Dtos.Tests;
 +
-+public class UnassignUserRoleCommand : IRequest
++public class RestaurantsProfileTests
 +{
-+    public string UserEmail { get; set; } = default!;
-+    public string RoleName { get; set; } = default!;
-+}
- 
- public class UnassignUserRoleCommandHandler(
-     ILogger<UnassignUserRoleCommandHandler> logger,
-diff --git a/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommand.cs b/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommand.cs
-deleted file mode 100644
-index e1399a4..0000000
---- a/Restaurants.Application/Users/Commands/UnssignUserRole/UnassignUserRoleCommand.cs
-+++ /dev/null
-@@ -1,10 +0,0 @@
--using MediatR;
--
--namespace Restaurants.Application.Users.Commands.UnassignUserRole;
--
--public class UnassignUserRoleCommand : IRequest
--{
--    public string UserEmail { get; set; } = default!;
--
--    public string RoleName { get; set; } = default!;
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommand.cs b/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommand.cs
-deleted file mode 100644
-index 8d08c4f..0000000
---- a/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommand.cs
-+++ /dev/null
-@@ -1,10 +0,0 @@
--using MediatR;
--
--namespace Restaurants.Application.Users.UpdateUserDetails.Commands;
--
--public class UpdateUserDetailsCommand : IRequest
--{
--    public DateOnly? DateOfBirth { get; set; }
--
--    public string? Nationality { get; set; }
--}
-\ No newline at end of file
-diff --git a/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommandHandler.cs b/Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
-similarity index 83%
-rename from Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommandHandler.cs
-rename to Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
-index 7792eca..64d6aa0 100644
---- a/Restaurants.Application/Users/Commands/UpdateUserDetails/UpdateUserDetailsCommandHandler.cs
-+++ b/Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
-@@ -4,7 +4,13 @@ using Microsoft.Extensions.Logging;
- using Restaurants.Domain.Entities;
- using Restaurants.Domain.Exceptions;
- 
--namespace Restaurants.Application.Users.UpdateUserDetails.Commands;
-+namespace Restaurants.Application.Users.Commands;
++    private readonly IMapper _mapper;
 +
-+public class UpdateUserDetailsCommand : IRequest
-+{
-+    public DateOnly? DateOfBirth { get; set; }
-+    public string? Nationality { get; set; }
++    public RestaurantsProfileTests()
++    {
++        var configuration = new MapperConfiguration(cfg => 
++        {
++            cfg.AddProfile<RestaurantsProfile>();
++        });
++
++        _mapper = configuration.CreateMapper();
++    }
++
++    [Fact()]
++    public void CreateMap_ForRestaurantsDto_MapsCorrectly()    
++    {
++        // Arrange
++        var restaurant = new Restaurant
++        {
++            Id = 1,
++            Name = "Test Restaurant",
++            Description = "Test Description",
++            Category = "Test Category",
++            HasDelivery = true,
++            ContactEmail = "test@example.com",
++            ContactNumber = "1234567890",
++            Address = new Address
++            {
++                City = "Test City",
++                Street = "Test Street",
++                PostalCode = "123-4567"
++            }
++        };  
++
++        // Act
++        var restaurantDto = _mapper.Map<RestaurantDto>(restaurant);
++
++        // Assert
++        restaurantDto.Should().NotBeNull();
++        restaurantDto.Id.Should().Be(restaurant.Id);
++        restaurantDto.Name.Should().Be(restaurant.Name);
++        restaurantDto.Description.Should().Be(restaurant.Description);
++        restaurantDto.Category.Should().Be(restaurant.Category);
++        restaurantDto.HasDelivery.Should().Be(restaurant.HasDelivery);
++        restaurantDto.City.Should().Be(restaurant.Address.City);
++        restaurantDto.Street.Should().Be(restaurant.Address.Street);
++        restaurantDto.PostalCode.Should().Be(restaurant.Address.PostalCode);
++    }
++
++    // CreateMap_ForCreateRestaurantsCommandToRestaurant_MapsCorrectly
++    [Fact()]
++    public void CreateMap_ForCreateRestaurantsCommandToRestaurant_MapsCorrectly()
++    {
++        // Arrange
++        var command = new CreateRestaurantCommand
++        {
++            Name = "Test Restaurant",
++            Description = "Test Description",
++            Category = "Test Category",
++            HasDelivery = true,
++            ContactEmail = "test@example.com",
++            ContactNumber = "1234567890",
++            City = "Test City",
++            Street = "Test Street",
++            PostalCode = "123-4567"            
++        };
++
++        // Act
++        var restaurant = _mapper.Map<Restaurant>(command);
++
++        // Assert
++        restaurant.Should().NotBeNull();
++        restaurant.Name.Should().Be(command.Name);
++        restaurant.Description.Should().Be(command.Description);
++        restaurant.Category.Should().Be(command.Category);
++        restaurant.HasDelivery.Should().Be(command.HasDelivery);
++        restaurant.ContactEmail.Should().Be(command.ContactEmail);
++        restaurant.ContactNumber.Should().Be(command.ContactNumber);
++        restaurant.Address.Should().NotBeNull();
++        restaurant.Address.City.Should().Be(command.City);
++        restaurant.Address.Street.Should().Be(command.Street);
++        restaurant.Address.PostalCode.Should().Be(command.PostalCode);
++    }
++
++    // update (same as create above)
++    [Fact()]
++    public void CreateMap_ForUpdateRestaurantsCommandToRestaurant_MapsCorrectly()
++    {
++        // Arrange
++        var command = new UpdateRestaurantCommand
++        {
++            Id = 1,
++            Name = "Updated Restaurant",
++            Description = "Updated Description",
++            HasDelivery = true,
++        };
++
++        // Act
++        var restaurant = _mapper.Map<Restaurant>(command);
++
++        // Assert
++        restaurant.Should().NotBeNull();
++        restaurant.Id.Should().Be(command.Id);
++        restaurant.Name.Should().Be(command.Name);
++        restaurant.Description.Should().Be(command.Description);
++        restaurant.HasDelivery.Should().Be(command.HasDelivery);
++        // * other fields are not mapped, so they should be null
++    }
 +}
+\ No newline at end of file
+diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs b/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
+index 5b07838..a661170 100644
+--- a/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
++++ b/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
+@@ -44,7 +44,7 @@ public class UpdateRestaurantCommandHandler(ILogger<UpdateRestaurantCommandHandl
+     {
+         logger.LogInformation("Updating restaurant with id: {RestaurantId} with {@UpdatedRestaurant}", request.Id, request);
  
- public class UpdateUserDetailsCommandHandler(
-     ILogger<UpdateUserDetailsCommandHandler> logger,
+-        // todo: shouldn't the logic between here and delete be in a transaction, incase someone else trys to update it or something?
++        // todo: shouldn't the logic between here and delete be in a transaction, incase someone else trs to update it or something?
+         var restaurant = await restaurantsRepository.GetById(request.Id);
+ 
+         if (restaurant == null)
