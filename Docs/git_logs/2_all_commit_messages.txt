@@ -1,3 +1,34 @@
+commit 6ced6a549fa69d7ca06add8316b40c4faa1f2395
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Sat Sep 21 23:59:52 2024 +0900
+
+    Enhance RestaurantsControllerTests with Mocking and Additional Test Cases
+    
+    - Updated RestaurantsControllerTests:
+      - Implemented mocking of IRestaurantsRepository using Moq.
+      - Added FakePolicyEvaluator to bypass authorization in tests.
+      - Introduced new test cases:
+        - GetById_ForExistingId_ShouldReturn200OK: Verifies correct retrieval of an existing restaurant.
+          * Checks the response JSON to ensure the returned data matches the expected restaurant details.
+        - GetById_ForNonExistingId_ShouldReturn404NotFound: Ensures proper handling of non-existent restaurant requests.
+      - Refactored existing tests for better naming and consistency.
+    
+    - Created FakePolicyEvaluator:
+      - Implements IPolicyEvaluator to simulate successful authentication and authorization.
+      - Adds a mock Admin role claim for testing purposes.
+    
+    - Modified WebApplicationFactory setup:
+      - Configured to use FakePolicyEvaluator and mock IRestaurantsRepository.
+      - Ensures consistent test behavior across different environments.
+    
+    These changes significantly improve the test coverage and reliability of the RestaurantsController.
+    By mocking the repository and bypassing actual authorization, tests can focus on controller logic
+    without dependencies on external systems or database state. The addition of specific test cases
+    for both existing and non-existing restaurant scenarios enhances the robustness of the API's
+    error handling and response consistency. The 200 OK test now not only checks the status code
+    but also verifies the correctness of the returned data, ensuring the API responds with accurate
+    restaurant information.
+
 commit 6d89f0f11ddd47f1e9524f638f9f23751a601ca3
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Sat Sep 21 00:46:35 2024 +0900

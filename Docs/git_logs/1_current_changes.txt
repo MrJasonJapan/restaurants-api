@@ -1,0 +1,1680 @@
+diff --git a/Docs/GitLogs/1_current_changes.txt b/Docs/GitLogs/1_current_changes.txt
+deleted file mode 100644
+index 8f43077..0000000
+--- a/Docs/GitLogs/1_current_changes.txt
++++ /dev/null
+@@ -1,137 +0,0 @@
+-diff --git a/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs b/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
+-index 36a31d5..ab832e4 100644
+---- a/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
+-+++ b/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
+-@@ -1,6 +1,16 @@
+- using System.Net;
+-+using System.Net.Http.Json;
+- using FluentAssertions;
+-+using Microsoft.AspNetCore.Authorization.Policy;
+- using Microsoft.AspNetCore.Mvc.Testing;
+-+using Microsoft.AspNetCore.TestHost;
+-+using Microsoft.Extensions.DependencyInjection;
+-+using Microsoft.Extensions.DependencyInjection.Extensions;
+-+using Moq;
+-+using Restaurants.API.Tests;
+-+using Restaurants.Application.Restaurants.Dtos;
+-+using Restaurants.Domain.Entities;
+-+using Restaurants.Domain.Repositories;
+- using Xunit;
+- 
+- namespace Restaurants.API.Controllers.Tests;
+-@@ -14,14 +24,65 @@ public class RestaurantsControllerTests : IClassFixture<WebApplicationFactory<Pr
+-     // * The term "factory" in WebApplicationFactory<Program> is intentionally chosen to reflect its role in
+-     // * manufacturing both the test server and the HttpClient instances needed for integration testing.
+-     private readonly WebApplicationFactory<Program> _factory;
+-+    private readonly Mock<IRestaurantsRepository> _restaurantsRepositoryMock = new();
+- 
+-     public RestaurantsControllerTests(WebApplicationFactory<Program> factory)
+-     {
+--        _factory = factory;
+-+        _factory = factory.WithWebHostBuilder(builder =>
+-+        {
+-+            builder.ConfigureTestServices(services =>
+-+            {
+-+                services.AddSingleton<IPolicyEvaluator, FakePolicyEvaluator>();
+-+                // Replace the actual repository with the mock repository
+-+                services.Replace(ServiceDescriptor.Scoped<IRestaurantsRepository>(_ => _restaurantsRepositoryMock.Object));
+-+            });
+-+        });
+-+    }
+-+
+-+    // getById for existing id should return 200 OK, with the correct data
+-+    [Fact]
+-+    public async Task GetById_ForExistingId_ShouldReturn200OK()
+-+    {
+-+        // Arrange
+-+        var id = 99;
+-+
+-+        var restaurant = new Restaurant { Id = id, Name = "Test Restaurant", Description = "Test Description" };
+-+
+-+        _restaurantsRepositoryMock.Setup(x => x.GetById(id)).ReturnsAsync(restaurant);
+-+
+-+        var client = _factory.CreateClient();
+-+
+-+        // Act
+-+        var response = await client.GetAsync($"/api/restaurants/{id}");
+-+        var restaurantDto = await response.Content.ReadFromJsonAsync<RestaurantDto>();
+-+
+-+        // Assert
+-+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+-+        restaurantDto.Should().NotBeNull();
+-+        restaurantDto.Name.Should().Be("Test Restaurant");
+-+        restaurantDto.Description.Should().Be("Test Description");
+-+    }
+-+
+-+    [Fact()]
+-+    public async Task GetById_ForNonExistingId_ShouldReturn404NotFound()
+-+    {
+-+        // Arrange
+-+        var id = 999;
+-+
+-+        // Regardless of the executing machine, the test will now always return the same result.
+-+        _restaurantsRepositoryMock.Setup(x => x.GetById(id)).ReturnsAsync((Restaurant?)null);    
+-+
+-+        var client = _factory.CreateClient();
+-+
+-+        // Act
+-+        var result = await client.GetAsync($"/api/restaurants/{id}");
+-+
+-+        // Assert
+-+        result.StatusCode.Should().Be(HttpStatusCode.NotFound);
+-     }
+- 
+-     [Fact()]
+--    public async Task GetAll_ForValidRequest_Returns200OkAsync()
+-+    public async Task GetAll_ForValidRequest_ShouldReturn200Ok()
+-     {
+-         // Arrange
+-         var client = _factory.CreateClient();
+-@@ -35,7 +96,7 @@ public class RestaurantsControllerTests : IClassFixture<WebApplicationFactory<Pr
+- 
+-     // get all for invalid request return 400 BadRequest
+-     [Fact]
+--    public async Task GetAll_ForInvalidRequest_Returns400BadRequestAsync()
+-+    public async Task GetAll_ForInvalidRequest_ShouldReturn400BadRequest()
+-     {
+-         // Arrange
+-         var client = _factory.CreateClient();
+-diff --git a/Restaurants.API.Tests/FakePolicyEvaluator.cs b/Restaurants.API.Tests/FakePolicyEvaluator.cs
+-new file mode 100644
+-index 0000000..22b4699
+---- /dev/null
+-+++ b/Restaurants.API.Tests/FakePolicyEvaluator.cs
+-@@ -0,0 +1,32 @@
+-+using System.Security.Claims;
+-+using Microsoft.AspNetCore.Authentication;
+-+using Microsoft.AspNetCore.Authorization;
+-+using Microsoft.AspNetCore.Authorization.Policy;
+-+using Microsoft.AspNetCore.Http;
+-+
+-+namespace Restaurants.API.Tests;
+-+
+-+public class FakePolicyEvaluator : IPolicyEvaluator
+-+{
+-+    public Task<AuthenticateResult> AuthenticateAsync(AuthorizationPolicy policy, HttpContext context)
+-+    {
+-+        var claimsPrincipal = new ClaimsPrincipal();
+-+
+-+        claimsPrincipal.AddIdentity(new ClaimsIdentity(
+-+            [
+-+                new Claim(ClaimTypes.NameIdentifier, "1"),
+-+                new Claim(ClaimTypes.Role, "Admin"),
+-+            ]));
+-+
+-+        var ticket = new AuthenticationTicket(claimsPrincipal, "Test");
+-+        var result = AuthenticateResult.Success(ticket);
+-+
+-+        return Task.FromResult(result);
+-+    }
+-+
+-+    public Task<PolicyAuthorizationResult> AuthorizeAsync(AuthorizationPolicy policy, AuthenticateResult authenticationResult, HttpContext context, object? resource)
+-+    {
+-+        var result = PolicyAuthorizationResult.Success();
+-+        return Task.FromResult(result);
+-+    }
+-+}
+-\ No newline at end of file
+diff --git a/Docs/GitLogs/2_all_commit_messages.txt b/Docs/GitLogs/2_all_commit_messages.txt
+deleted file mode 100644
+index 123adc9..0000000
+--- a/Docs/GitLogs/2_all_commit_messages.txt
++++ /dev/null
+@@ -1,925 +0,0 @@
+-commit 6d89f0f11ddd47f1e9524f638f9f23751a601ca3
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Sat Sep 21 00:46:35 2024 +0900
+-
+-    Add Integration Tests for RestaurantsController and Refactor Program.cs
+-    
+-    - Created RestaurantsControllerTests class for integration testing:
+-      - Implemented test for successful GET request to /api/restaurants endpoint.
+-      - Added test for invalid GET request to /api/restaurants without required parameters.
+-      - Utilized WebApplicationFactory<Program> for setting up test server and HTTP client.
+-    
+-    - Updated Restaurants.API.Tests.csproj:
+-      - Added Microsoft.AspNetCore.Mvc.Testing package for integration testing.
+-    
+-    - Refactored RestaurantsController:
+-      - Reordered methods to improve readability (GET methods before POST).
+-    
+-    - Modified Program.cs:
+-      - Added partial class declaration for Program to support WebApplicationFactory in tests.
+-    
+-    These changes enhance the API's testability by introducing integration tests for the
+-    RestaurantsController. The use of WebApplicationFactory allows for in-memory testing of
+-    the entire API, including middleware and dependency injection. The refactoring of
+-    RestaurantsController and Program.cs improves code organization and supports the new
+-    testing approach. This commit builds upon previous testing efforts, extending coverage
+-    to include API-level integration tests.
+-
+-commit fda23924fee161198fbf0ef21176499594a8d469
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Sat Sep 21 00:22:36 2024 +0900
+-
+-    Add Unit Tests for ErrorHandlingMiddleware and Create Restaurants.API.Tests Project
+-    
+-    - Created new project 'Restaurants.API.Tests' for unit testing the API layer.
+-    - Implemented ErrorHandlingMiddlewareTests:
+-      - Added test for successful scenario where no exception is thrown.
+-      - Added test for handling NotFoundException, ensuring 404 status code is set.
+-      - Added test for handling ForbidException, ensuring 403 status code is set.
+-      - Added test for handling generic exceptions, ensuring 500 status code is set.
+-    - Updated Restaurants.API.Tests.csproj:
+-      - Added necessary package references for testing, including FluentAssertions, Moq, MSTest, xunit, and Newtonsoft.Json.
+-      - Set up project reference to Restaurants.API.
+-    - Updated Restaurants.API.sln to include the new Restaurants.API.Tests project.
+-    
+-    These changes enhance the testability of the API layer, particularly focusing on
+-    error handling middleware. The addition of unit tests for the ErrorHandlingMiddleware
+-    improves the reliability of the error handling logic, covering various scenarios
+-    including successful requests, not found errors, forbidden access, and generic exceptions.
+-    This commit continues the trend of improving test coverage across the application,
+-    following the recent additions of tests for the Application and Infrastructure layers.
+-
+-commit 14ef13408f950dfc046e929f37eb672cef9e6cfc
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Fri Sep 20 22:37:52 2024 +0900
+-
+-    Add Infrastructure Tests and Refactor Authorization Requirements
+-    
+-    - Created new project 'Restaurants.Infrastructure.Tests' for unit testing the infrastructure layer.
+-    
+-    - Implemented CreatedMultipleRestaurantsRequirementHandlerTests:
+-      - Added test for successful scenario where user has created multiple restaurants.
+-      - Added test for scenario where user has not created multiple restaurants.
+-      - Mocked dependencies including IUserContext and IRestaurantsRepository.
+-      - Verified correct behavior of CreatedMultipleRestaurantsRequirementHandler.
+-    
+-    - Refactored CreatedMultipleRestaurantsRequirementHandler:
+-      - Moved implementation to test file, suggesting a potential refactor or removal of the original handler.
+-    
+-    - Updated solution file to include the new Infrastructure.Tests project.
+-    
+-    - Added assembly.cs file in Restaurants.Infrastructure:
+-      - Used InternalsVisibleTo attribute to make internal members visible to the test project.
+-      - By default, internal members are only accessible within the same assembly. This attribute relaxes that restriction for testing purposes.
+-    
+-    These changes enhance the testability of the infrastructure layer, particularly focusing on
+-    authorization requirements. The addition of unit tests for the CreatedMultipleRestaurantsRequirementHandler
+-    improves the reliability of the authorization logic. The refactoring of the handler suggests
+-    a potential redesign of the authorization system, which should be reviewed and finalized in
+-    subsequent commits. The use of InternalsVisibleTo allows for thorough testing of internal
+-    components without compromising encapsulation in the production code.
+-
+-commit 870909033a048fd6f770dbb0b745f6b02bb59dc7
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Fri Sep 20 20:57:16 2024 +0900
+-
+-    Add Unit Tests for Restaurant Command Handlers and AutoMapper Profiles
+-    
+-    - Implemented CreateRestaurantCommandHandlerTests:
+-      - Added test for successful restaurant creation scenario.
+-      - Mocked dependencies including ILogger, IMapper, IRestaurantsRepository, IRestaurantAuthorizationService, and IUserContext.
+-      - Verified correct OwnerId assignment and repository interaction.
+-    
+-    - Created UpdateRestaurantCommandHandlerTests:
+-      - Added tests for successful update, non-existing restaurant, and unauthorized access scenarios.
+-      - Implemented setup for mocking dependencies and initializing the handler.
+-      - Used FluentAssertions for more expressive test assertions.
+-    
+-    - Added RestaurantsProfileTests:
+-      - Implemented tests for mapping Restaurant to RestaurantDto.
+-      - Added tests for mapping CreateRestaurantCommand and UpdateRestaurantCommand to Restaurant.
+-      - Verified correct mapping of all relevant properties, including nested Address object.
+-    
+-    - Minor refactoring:
+-      - Fixed a typo in UpdateRestaurantCommand.cs comment.
+-    
+-    These tests enhance the reliability of the restaurant-related command handlers and AutoMapper profiles,
+-    covering key scenarios such as creation, update, and data mapping. The addition of these unit tests
+-    improves code quality and helps prevent regressions in future development.
+-
+-commit b0784c59d35bc405f71c765afefe541c48485a34
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Fri Sep 20 00:11:42 2024 +0900
+-
+-    Refactor Command Structure and Add Unit Tests for CreateRestaurantCommand Validation
+-    
+-    - Consolidated CreateRestaurant-related files into a single file:
+-      - Moved CreateRestaurantCommand, CreateRestaurantCommandValidator, and CreateRestaurantCommandHandler into CreateRestaurantCommand.cs.
+-      - Updated namespace to Restaurants.Application.Restaurants.Commands.
+-    
+-    - Implemented similar consolidation for UpdateRestaurant and DeleteRestaurant commands.
+-    
+-    - Created new unit tests for CreateRestaurantCommandValidator:
+-      - Added CreateRestaurantCommandValidatorTests.cs in the Restaurants.Application.Tests project.
+-      - Implemented tests for valid and invalid CreateRestaurantCommand scenarios.
+-      - Added theory-based tests for validating categories and postal codes.
+-    
+-    - Updated import statements in affected files to reflect new command structure.
+-    
+-    - Adjusted RestaurantsProfile to use the new command namespace.
+-    
+-    These changes improve code organization by grouping related command classes together,
+-    making the codebase more maintainable. The addition of unit tests for the CreateRestaurantCommandValidator
+-    enhances the reliability of the validation logic, covering various scenarios including
+-    valid inputs, invalid inputs, and specific validations for categories and postal codes.
+-
+-commit 54d8a2f65f65dd544a4cbbef77bfbaebb31bdffc
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu Sep 19 21:29:31 2024 +0900
+-
+-    Add Unit Tests for User Management and Authorization
+-    
+-    ※ Used Visual Studio Code to Create Test Project, and Tests
+-    See: https://www.notion.so/mr-kobayashi/NET-8-0-API-restaurants-api-c6051cb4c6b244c1bd56844bcd2334d3?pvs=4#4d8116bc8af04c9ea8502216d5d66cea
+-    
+-    - Created new project 'Restaurants.Application.Tests' for unit testing the application layer.
+-    - Implemented unit tests for CurrentUser class:
+-      - Added tests to verify IsInRole functionality with matching and non-matching roles.
+-      - Included a test to ensure case-sensitivity in role checking.
+-    - Added unit tests for UserContext class:
+-      - Implemented test for GetCurrentUser when user is authenticated, verifying correct parsing of claims.
+-      - Added test to check for InvalidOperationException when user context is not present.
+-    - Updated solution file to include the new test project.
+-    - Added necessary package references for testing:
+-      - Included FluentAssertions, Moq, MSTest, and xunit for comprehensive testing capabilities.
+-    - Ensured test project references the main Restaurants.Application project.
+-    
+-    These tests enhance the reliability of the user management and authorization components,
+-    covering key scenarios such as role verification and user context retrieval. The addition
+-    of a dedicated test project sets the foundation for continued test-driven development
+-    practices in the application layer.
+-
+-commit 2abd22bdb31334565e1105299bc02d93b2bad83b
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed Sep 18 21:22:51 2024 +0900
+-
+-    Implement pagination and search for GetAllRestaurants query
+-    
+-    - Update GetAllRestaurantsQuery:
+-      - Add properties for SearchPhrase, PageNumber, PageSize, SortBy, and SortDirection
+-      - Implement IRequest<PagedResult<RestaurantDto>> interface
+-    
+-    - Create GetAllRestaurantsQueryValidator:
+-      - Add validation rules for PageNumber, PageSize, and SortBy
+-      - Ensure PageSize is within allowed values
+-      - Validate SortBy against allowed column names
+-    
+-    - Refactor GetAllRestaurantsQueryHandler:
+-      - Modify Handle method to use new query parameters
+-      - Implement pagination, searching, and sorting logic
+-      - Return PagedResult<RestaurantDto> instead of IEnumerable<RestaurantDto>
+-    
+-    - Add PagedResult<T> class in Application layer:
+-      - Implement properties for Items, TotalPages, ItemsFrom, ItemsTo, and TotalItems
+-      - Calculate pagination details in the constructor
+-    
+-    - Update IRestaurantsRepository and RestaurantsRepository:
+-      - Add GetAllMatching method to support pagination, searching, and sorting
+-      - Implement LINQ query with dynamic sorting and filtering
+-    
+-    - Modify RestaurantsController:
+-      - Update GetAll action to accept GetAllRestaurantsQuery as a parameter
+-      - Remove [Authorize] attribute and add [AllowAnonymous]
+-    
+-    - Update Restaurants.API.http:
+-      - Add test cases for paginated and sorted restaurant queries
+-    
+-    This commit introduces pagination, searching, and sorting capabilities to the GetAllRestaurants endpoint, improving performance and flexibility for large datasets. It also includes proper validation for query parameters and updates the API documentation.
+-
+-commit 93a6d70b0647cfeb08876ac45db275871ce9b898
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed Sep 18 17:39:47 2024 +0900
+-
+-    Implement CreatedMultipleRestaurantsRequirement for authorization
+-    
+-    - Add CreatedMultipleRestaurantsRequirement class:
+-      - Implement IAuthorizationRequirement interface
+-      - Include MinimumRestaurantsCreated property to set the threshold
+-    
+-    - Create CreatedMultipleRestaurantsRequirementHandler:
+-      - Inherit from AuthorizationHandler<CreatedMultipleRestaurantsRequirement>
+-      - Inject IRestaurantsRepository and IUserContext for data access
+-      - Implement HandleRequirementAsync method to check user's restaurant count
+-      - Use context.Succeed() or context.Fail() based on the requirement
+-    
+-    - Update ServiceCollectionExtensions:
+-      - Add CreatedAtLeast2Restaurants policy
+-      - Register CreatedMultipleRestaurantsRequirementHandler
+-    
+-    - Modify RestaurantsController:
+-      - Apply [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)] to GetAll action
+-      - Remove [AllowAnonymous] attribute
+-    
+-    - Refine launchSettings.json:
+-      - Remove "http" profile to ensure HTTPS is always used
+-      - Adjust applicationUrl for consistency
+-    
+-    This commit introduces a new authorization requirement based on the number of
+-    restaurants a user has created, enhancing the application's access control. It
+-    also improves error handling for unauthorized access and ensures HTTPS usage.
+-
+-commit cd71c55bdd1b21c8147434b4040c95dcdb6c1134
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed Sep 18 16:58:11 2024 +0900
+-
+-    Implement restaurant authorization and enhance error handling
+-    
+-    - Add RestaurantAuthorizationService for fine-grained access control
+-      - Implement IRestaurantAuthorizationService interface
+-      - Add authorization checks based on user roles and restaurant ownership
+-      - Integrate with existing user context
+-    
+-    - Update command handlers to use RestaurantAuthorizationService
+-      - Modify CreateRestaurantCommandHandler
+-      - Update DeleteRestaurantCommandHandler
+-      - Enhance UpdateRestaurantCommandHandler
+-      - Refactor DeleteDishesForRestaurantCommandHandler
+-    
+-    - Introduce new domain concepts
+-      - Add ResourceOperation enum for CRUD operations
+-      - Create ForbidException for unauthorized access attempts
+-    
+-    - Enhance ErrorHandlingMiddleware
+-      - Add specific handling for ForbidException
+-      - Return 403 Forbidden status code for unauthorized access
+-    
+-    - Refine logging configuration in appsettings.Development.json
+-      - Adjust log levels for Microsoft namespaces
+-    
+-    - Minor updates
+-      - Adjust HTTP port in launchSettings.json
+-      - Add comment for relationships in Restaurant entity
+-    
+-    This commit introduces a robust authorization system for restaurant-related
+-    operations, improves error handling, and refines the overall structure of
+-    the application. It ensures that only authorized users can perform specific
+-    actions on restaurants based on their roles and ownership.
+-
+-commit 2e80849d8cfaddd8457633bbba1afe174f716759
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu Jul 11 20:04:45 2024 +0900
+-
+-    Implement owner assignment for restaurants
+-    
+-    - Updated `Restaurants.API.http` to include a new endpoint for setting user roles.
+-    - Modified `CreateRestaurantCommandHandler` to utilize `IUserContext` for assigning the current user as the restaurant owner.
+-    - Added `OwnerId` and `Owner` properties to the `Restaurant` entity.
+-    - Extended the `User` entity to include a collection of owned restaurants.
+-    - Updated the `RestaurantsDbContext` to establish relationships between `Restaurant` and `User` entities.
+-    - Updated migrations to reflect the new database relationships.
+-    
+-    Other notes / Take-aways
+-    
+-    - The `CreateRestaurantCommandHandler` now logs the email and ID of the user creating a restaurant
+-    - The new `OwnerId` field in the `Restaurant` entity ensures that each restaurant is linked to a user
+-    - The database context configurations enforce foreign key relationships, ensuring data integrity between `Restaurant` and `User`.
+-
+-commit 401419edadb0559a52fe3492d82d53e2304a4530
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu Jul 11 19:08:49 2024 +0900
+-
+-    Add custom authorization requirement for age-based access control
+-    
+-    - Implemented MinimumAgeRequirement as a custom authorization requirement.
+-    - Created MinimumAgeRequirementHandler to process the new requirement.
+-    - Updated ServiceCollectionExtensions with AtLeast20 policy using the new requirement.
+-    - Enhanced CurrentUser and UserContext to include Nationality and DateOfBirth.
+-    - Applied [Authorize] and age-based policy to DishesController actions.
+-    - Updated Restaurants.API.http for testing with new authentication token.
+-    
+-    This change introduces a custom age-based authorization mechanism, allowing for more nuanced access control. It demonstrates how to extend the authorization system with custom requirements and handlers.
+-
+-commit 3203502718be9abebc641491d582a54890156091
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu Jul 11 18:03:26 2024 +0900
+-
+-    Implement custom authorization policy for nationality
+-    
+-    - Added PolicyNames and AppClaimTypes constants for authorization.
+-    - Updated RestaurantsUserClaimsPrincipalFactory to use new AppClaimTypes.
+-    - Implemented HasNationality policy in ServiceCollectionExtensions.
+-    - Applied HasNationality policy to GetById action in RestaurantsController.
+-    - Updated authentication token in Restaurants.API.http for testing.
+-    
+-    This change introduces a custom authorization policy that restricts access to certain endpoints based on the user's nationality claim. It demonstrates how to leverage custom claims for more granular access control in the application.
+-
+-commit b4528ee07bf3f6e96bc50b517f1c1ac5b9709438
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu Jul 11 17:47:02 2024 +0900
+-
+-    Enhance user authorization by extending user claims
+-    
+-    - Updated ServiceCollectionExtensions to include custom RestaurantsUserClaimsPrincipalFactory.
+-    - Added RestaurantsUserClaimsPrincipalFactory to customize claims for authenticated users.
+-    - Updated authentication token in Restaurants.API.http for testing.
+-    
+-    This change improves the authentication process by allowing custom claims to be added to the user's identity, potentially enabling more granular authorization checks and richer user information throughout the application.
+-
+-commit 2fd9ee1ce45d7ac435134be60efc469ef36fb9b5
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu Jul 11 17:18:08 2024 +0900
+-
+-    Add functionality to unassign user roles
+-    
+-    - Created UnassignUserRoleCommand and UnassignUserRoleCommandHandler to handle role removal requests.
+-    - Updated IdentityController with new endpoint for unassigning user roles:
+-      - Added [HttpDelete("userRole")] action for role removal.
+-      - Applied [Authorize(Roles = UserRoles.Admin)] to restrict access to admins only.
+-    - Implemented logic in UnassignUserRoleCommandHandler to remove a role from a user using UserManager and RoleManager.
+-    
+-    This change complements the existing role assignment functionality, providing a complete set of role management operations for administrators.
+-
+-commit effaeda423f77e4b8dcece5dc05d9c020ba832f7
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Mon Jul 1 22:43:33 2024 +0900
+-
+-    Implement User Role Assignment and Update IdentityController
+-    
+-    - Added AssignUserRoleCommand to handle role assignment requests.
+-    - Created AssignUserRoleCommandHandler to process role assignment logic:
+-      - Introduced UserManager<User> and RoleManager<IdentityRole> for user and role management.
+-    - Updated IdentityController with new endpoint for assigning user roles:
+-      - Added [HttpPost("userRole")] action for role assignment.
+-      - Applied [Authorize(Roles = UserRoles.Admin)] to restrict access to admins only.
+-    
+-    Other notes / Take-aways
+-    
+-    - Role assignment is now a separate operation, allowing for more flexible user management.
+-    - Only users with the Admin role can assign roles, enhancing security.
+-    - UserManager<User> provides methods for managing users, such as finding users by email and adding users to roles.
+-    - RoleManager<IdentityRole> offers functionality for role operations, including finding roles by name.
+-    - These managers abstract away the complexity of user and role operations, making the code more maintainable and less error-prone.
+-
+-commit ca91be4caf1b5b1cd5fb91afd274ef475bb140b6
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Mon Jul 1 21:19:17 2024 +0900
+-
+-    Add Role-Based Authorization to Restaurants API
+-    
+-    - Added `UserRoles` constants in `Restaurants.Domain.Constants` for defining user roles.
+-    - Modified `ServiceCollectionExtensions` to add role support in Identity configuration.
+-    - Updated `RestaurantSeeder` to include role creation and assignment.
+-    - Updated `RestaurantsController`:
+-      - Added `[Authorize(Roles = UserRoles.Owner)]` attribute to `CreateRestaurant` action.
+-    - Modified `Restaurants.API.http` to include separate login requests for different user roles.
+-    
+-    Other notes / Take-aways
+-    
+-    - Role-based authorization allows for more granular control over API access.
+-    - The `AddRoles<IdentityRole>()` method in the Identity configuration enables role management.
+-    - Seeding roles and assigning them to users ensures a proper initial state for testing.
+-    - Manual role assignment in the seeder provides a way to set up test users with specific roles.
+-    - The `Owner` role is now required to create new restaurants, enhancing security.
+-
+-commit 5487abec519986d0e93b43b34916d7e30f6662f8
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Sun Jun 30 00:14:08 2024 +0900
+-
+-    Setup UserContext for Token-based User Information and Wrap in CurrentUser Object
+-    
+-    - Created `UserContext` to encapsulate user information from the HTTP request's token.
+-    - Implemented `CurrentUser` record to represent authenticated user details.
+-    - Registered `UserContext` and `HttpContextAccessor` in the DI container via `ServiceCollectionExtensions`.
+-    - Added `IdentityController` with an endpoint to update user details using `UserContext`.
+-    - Introduced `UpdateUserDetailsCommand` and `UpdateUserDetailsCommandHandler` to handle user detail updates.
+-    - Updated `User` entity to include `DateOfBirth` and `Nationality` properties.
+-    - Created a migration to add the new properties to the `AspNetUsers` table.
+-    - Modified `Program.cs` to group identity endpoints under the "Identity" tag in Swagger UI.
+-    
+-    Other notes / Take-aways
+-    
+-    - `UserContext` retrieves user details from the HTTP context, encapsulating logic to parse the JWT token.
+-    - `CurrentUser` record holds user ID, email, and roles, making user information easily accessible.
+-    - The `IdentityController` uses `UserContext` to update user details securely, ensuring the correct user is modified based on the token.
+-    - Adding `DateOfBirth` and `Nationality` to the `User` entity extends user profile capabilities.
+-    - The migration updates the database schema to include new user properties, ensuring persistence.
+-    - ASP.NET Core Identity handles token verification and authentication, simplifying integration.
+-    - Grouping identity endpoints in Swagger enhances API documentation and usability.
+-
+-commit 5b17b9dde4aa4bb46c55b154d20cecd3111a3b53
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Sat Jun 29 22:53:08 2024 +0900
+-
+-    Implement Authentication in Restaurants API
+-    
+-    - Added `[Authorize]` attribute to `RestaurantsController` to secure endpoints.
+-    - Applied `[AllowAnonymous]` attribute to `GetAll` method in `RestaurantsController` to allow public access.
+-    - Updated `WebApplicationBuilderExtensions` to include `AddAuthentication` call.
+-    - Modified `Restaurants.API.http` to include bearer token for authorized requests and updated endpoints for registration and login.
+-    
+-    Other notes / Take-aways
+-    
+-    - `[Authorize]` attribute ensures that only authenticated users can access the controller's endpoints.
+-    - `[AllowAnonymous]` allows specific methods to be accessed without authentication, useful for public endpoints.
+-    - Adding authentication services in `WebApplicationBuilderExtensions` sets up the necessary middleware for handling authentication.
+-    - Token verification and authentication logic are managed by ASP.NET Core Identity, simplifying the integration and management of authentication.
+-
+-commit 5d86c66e88c9fcff8cdd3aaabd24a3e95d0225cb
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Fri Jun 14 19:28:57 2024 +0900
+-
+-    Refactor Program.cs to Improve Presentation Layer Setup (added file I forgot to commit)
+-    
+-    - Replaced all presentation layer setups with the `AddPresentation` method (including Swagger and Serilog) for enhanced modularity and maintainability.
+-    
+-    Other notes / Take-aways
+-    
+-    - The `AddPresentation` method encapsulates all presentation setups, promoting cleaner and more maintainable code.
+-    - Streamlining configurations out of `Program.cs` makes the startup process simpler and less error-prone.
+-
+-commit b5a247a67e1d2967a6d5e4a1dfe3b8514932fbff
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu Jun 13 20:07:48 2024 +0900
+-
+-    Refactor Program.cs to Improve Presentation Layer Setup
+-    
+-    - Replaced all presentation layer setups with the `AddPresentation` method (including Swagger and Serilog) for enhanced modularity and maintainability.
+-    
+-    Other notes / Take-aways
+-    
+-    - The `AddPresentation` method encapsulates all presentation setups, promoting cleaner and more maintainable code.
+-    - Streamlining configurations out of `Program.cs` makes the startup process simpler and less error-prone.
+-
+-commit 9744bf06f2a25d0c6c9ba39c7e4b639c76725909
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Tue Jun 4 00:17:18 2024 +0900
+-
+-    Add Swagger configuration and route adjustment for Identity API
+-    
+-    - Added `AddEndpointsApiExplorer` to include minimal endpoints in Swagger so Identity endpoints show in the Swagger UI
+-    - Updated `Program.cs` to configure Swagger UI to support Bearer token authentication saving and usage inside requests.
+-    - Adjusted route for Identity API endpoints to be under "api/identity".UI.
+-    
+-    Other notes / Take-aways
+-    
+-    - The `AddSecurityDefinition` and `AddSecurityRequirement` methods in Swagger configuration ensure that the token is included in each request.
+-    - The route adjustment using `MapGroup("api/identity").MapIdentityApi<User>()` places the identity endpoints under a specific route for better organization.
+-
+-commit 96cc1296e7044b1db12c8ee64fbdce15eb4b55a3
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Mon Jun 3 23:55:15 2024 +0900
+-
+-    Add ASP.NET Core Identity for User Management
+-    
+-    - Updated `Program.cs`:
+-      - Configured `app.MapIdentityApi<User>()` to add endpoints for user management (register, login, etc.).
+-    - Created `User.cs` in `Restaurants.Domain.Entities`:
+-      - Defined `User` class inheriting from `IdentityUser`.
+-    - Updated `Restaurants.Domain.csproj`:
+-      - Added package reference for `Microsoft.AspNetCore.Identity.EntityFrameworkCore`.
+-    - Updated `ServiceCollectionExtensions.cs`:
+-      - Configured Identity endpoints and services using `services.AddIdentityApiEndpoints<User>()`.
+-    - Added migration `AddDotnetCoreIdentity` and updated `RestaurantsDbContextModelSnapshot`:
+-      - Included Identity tables for roles, users, claims, logins, and tokens.
+-    - Updated `RestaurantsDbContext.cs`:
+-      - Inherited from `IdentityDbContext<User>` instead of `DbContext`.
+-    - Updated `Restaurants.API.http`:
+-      - Added HTTP requests for user registration and login.
+-    
+-    Other notes / Take-aways
+-    
+-    - Adding ASP.NET Core Identity provides built-in support for user authentication and authorization, making it easier to manage users, roles, and claims.
+-    - Configuring `IdentityDbContext` ensures that the necessary tables for Identity are created and managed automatically.
+-
+-commit e6ee60316371cb0ca28db1171371ec49cce3a325
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Sun Jun 2 01:45:20 2024 +0900
+-
+-    Refactor CreateDish Endpoint to Return CreatedAtAction
+-    
+-    - Updated `DishesController`:
+-      - Modified `CreateDish` action to return `CreatedAtAction` with the URI of the newly created dish.
+-    - Updated `CreateDishCommand` and `CreateDishCommandHandler`:
+-      - Changed `IRequest` type from `IRequest` to `IRequest<int>` to return the newly created dish ID.
+-      - Updated `Handle` method to return the dish ID after creation.
+-    - Updated `Restaurants.API.http`:
+-      - Adjusted test case for creating a new dish to reflect the expected `Created` status and URI of the created dish.
+-    
+-    Other notes / Take-aways
+-    
+-    - Returning `CreatedAtAction` provides a more RESTful response, including the location of the newly created resource.
+-
+-commit 71eca1cde143e8506e90a2ae2109b11831c773a0
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Sun Jun 2 01:35:58 2024 +0900
+-
+-    Add Dishes Deletion with CQRS
+-    
+-    - Updated `Restaurants.API.http`:
+-      - Added DELETE request for removing dishes from a specific restaurant.
+-    - Updated `DishesController.cs`:
+-      - Added `DeleteDishesForRestaurant` method to handle deletion of all dishes for a given restaurant.
+-    - Updated `IDishesRepository.cs`:
+-      - Added `Delete` method to remove multiple dish entities.
+-    - Updated `DishesRepository.cs`:
+-      - Implemented `Delete` method to remove multiple dish entities from the database.
+-    - Added `DeleteDishesForRestaurantCommand.cs`:
+-      - Created command to encapsulate the deletion request.
+-    - Added `DeleteDishesForRestaurantCommandHandler.cs`:
+-      - Implemented handler for `DeleteDishesForRestaurantCommand` to process the deletion logic.
+-    
+-    Other notes / Take-aways
+-    
+-    - Implementing a bulk delete operation for dishes helps in efficiently managing dish data related to a restaurant.
+-
+-commit 12b6f42a1da5f3762f1dd2af9ad64bcd5fc031e1
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Sun Jun 2 01:14:22 2024 +0900
+-
+-    Add Dish Queries and Update Controllers
+-    
+-    - Updated `Restaurants.API.http`:
+-      - Added endpoints for retrieving all dishes for a specific restaurant and getting a specific dish by ID for a restaurant.
+-    - Updated `DishesController.cs`:
+-      - Added actions for `GetAllForRestaurant` and `GetByIdForRestaurant` to handle retrieval of dishes.
+-    - Updated `RestaurantsController.cs`:
+-      - Minor refactoring for better alignment with new dish queries.
+-    - Added `GetDishByIdForRestaurantQuery.cs` and `GetDishByIdForRestaurantQueryHandler.cs`:
+-      - Created query and handler to get a specific dish by its ID for a given restaurant.
+-    - Added `GetDishesForRestaurantQuery.cs` and `GetDishesForRestaurantQueryHandler.cs`:
+-      - Created query and handler to retrieve all dishes for a specific restaurant.
+-    
+-    Other notes / Take-aways
+-    
+-    - The new endpoints provide more granular access to dish data, allowing clients to retrieve specific dishes or all dishes for a restaurant.
+-    - Query handlers ensure that only existing restaurants and dishes are queried, throwing `NotFoundException` for invalid requests.
+-    - Using MediatR for queries maintains consistency with the CQRS pattern, separating query logic from command logic.
+-
+-commit c803deb95a97995afd045aa31c9880c647da1ab4
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Fri May 31 17:00:53 2024 +0900
+-
+-    Implement Create Dish Functionality
+-    
+-    - Updated `DishesProfile.cs`:
+-      - Added mappings for `CreateDishCommand` to `Dish` and `CreateDishCommand` to `DishDto`.
+-    - Updated `ServiceCollectionExtensions.cs`:
+-      - Registered `IDishesRepository` with `DishesRepository`.
+-    - Added `DishesController.cs`:
+-      - Created `CreateDish` action to handle the creation of a new dish using `CreateDishCommand`.
+-    - Added `CreateDishCommand.cs`:
+-      - Created command class for creating a new dish with properties for `Name`, `Description`, `Price`, `KiloCalories`, and `RestaurantId`.
+-    - Added `CreateDishCommandHandler.cs`:
+-      - Implemented handler for processing `CreateDishCommand`, validating the restaurant, and saving the new dish to the database.
+-    - Added `CreateDishCommandValidator.cs`:
+-      - Created validator for `CreateDishCommand` to enforce rules for `Price` and `KiloCalories` to be non-negative.
+-    - Added `IDishesRepository.cs` and `DishesRepository.cs`:
+-      - Defined and implemented repository interface and class for handling dish-related database operations.
+-    - Updated `Restaurants.API.http`:
+-      - Added test cases for creating a new dish with valid and invalid inputs.
+-    
+-    Other notes / Take-aways
+-    
+-    - Creating a new dish is now supported with proper validation and mapping.
+-    - The command handler ensures the associated restaurant exists before creating the dish, improving data integrity.
+-    - Validators provide early feedback on invalid inputs, reducing errors at the database level.
+-
+-commit f75c0070e1cc75aef86a52df42fe94fa91ad13ca
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Fri May 31 15:58:48 2024 +0900
+-
+-    Add Request Time Logging Middleware
+-    
+-    - Updated `Program.cs`:
+-      - Registered `RequestTimeLoggingMiddleware` with `AddScoped`.
+-      - Configured `RequestTimeLoggingMiddleware` to log request processing time.
+-    - Added `RequestTimeLoggingMiddleware.cs` in the Middleware folder:
+-      - Created `RequestTimeLoggingMiddleware` class implementing `IMiddleware`.
+-      - Implemented `InvokeAsync` method to log the time taken to process each HTTP request.
+-      - `RequestTimeLoggingMiddleware` measures and logs the duration of each HTTP request, providing insights into slow requests.
+-      - Logging requests that take longer than 4 milliseconds helps identify potential performance issues.
+-    
+-    Other notes / Take-aways
+-    
+-    - Middleware placement is important; ensure `RequestTimeLoggingMiddleware` is registered after `ErrorHandlingMiddleware` to capture accurate request times even when exceptions occur.
+-
+-commit f1f7c3896c3a8ba60ec2ed352d0e30fa177a29f1
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Fri May 31 15:41:52 2024 +0900
+-
+-    Refactor Error Handling and Add NotFoundException
+-    
+-    - Updated `RestaurantsController.cs`:
+-      - Refactored `GetById`, `UpdateRestaurant`, and `DeleteRestaurant` actions to remove redundant checks and return types.
+-      - Simplified action methods to rely on the new exception handling middleware.
+-    - Updated `ErrorHandlingMiddleware.cs`:
+-      - Added handling for `NotFoundException` to return a 404 status code with a custom message.
+-    - Updated command and query handlers to throw `NotFoundException`:
+-      - Modified `DeleteRestaurantCommandHandler` to throw `NotFoundException` when a restaurant is not found.
+-      - Modified `UpdateRestaurantCommandHandler` to throw `NotFoundException` when a restaurant is not found.
+-      - Modified `GetRestaurantByIdQueryHandler` to throw `NotFoundException` when a restaurant is not found.
+-    - Added `NotFoundException.cs`:
+-      - Created a custom exception to represent resource not found scenarios with a detailed message.
+-    
+-    Other notes / Take-aways
+-    
+-    - Refactoring the controller actions and command/query handlers to use `NotFoundException` improves code readability and consistency.
+-    - Centralized error handling with middleware reduces duplicate code and ensures consistent error responses.
+-    - Custom `NotFoundException` provides more meaningful error messages, aiding in debugging and client interaction.
+-
+-commit ec8f386d35745b2011287f2f9b77a33b5acb5dc2
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu May 30 20:43:51 2024 +0900
+-
+-    Add Error Handling Middleware
+-    
+-    - Updated `Program.cs`:
+-      - Registered `ErrorHandlingMiddleware` with `AddScoped`.
+-      - Configured `ErrorHandlingMiddleware` to be the first middleware in the HTTP request pipeline to catch exceptions.
+-    - Added `ErrorHandlingMiddleware.cs` in the Middleware folder:
+-      - Created `ErrorHandlingMiddleware` class implementing `IMiddleware`.
+-      - Implemented `InvokeAsync` method to catch exceptions, log errors, and return a generic error response.
+-    
+-    Other notes / Take-aways
+-    
+-    - Custom middleware for error handling improves application security by hiding internal error details about the API.
+-    - Placing `ErrorHandlingMiddleware` at the beginning of the pipeline ensures it catches exceptions thrown by any subsequent middleware or request handlers.
+-    - The middleware logs the error using the provided logger and returns a standardized error response to the client.
+-
+-commit fdfd4556dc7dcb4bbcd882626312fa1680bff63c
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu May 30 19:59:45 2024 +0900
+-
+-    Add Swagger and Update Controller Return Types
+-    
+-    - Updated `Restaurants.API.csproj`:
+-      - Added package reference for `Swashbuckle.AspNetCore` to support Swagger.
+-    - Updated `Program.cs`:
+-      - Added Swagger service registration with `AddSwaggerGen`.
+-      - Configured Swagger to be used in the development environment.
+-    - Updated `RestaurantsController.cs`:
+-      - Changed return types for `GetAll` and `GetById` methods to use `RestaurantDto`.
+-      - Added `ProducesResponseType` attributes for better API documentation and client support.
+-    
+-    Other notes / Take-aways
+-    
+-    - Adding Swagger provides interactive API documentation and testing tool, improving developer experience and helping those unfamiliar with the API.
+-    - Using `ProducesResponseType` helps generate accurate API documentation, indicating possible HTTP status codes for each endpoint.
+-    - Updating method signatures ensures that Swagger has more information to work with, enhancing the quality of the generated API documentation.
+-
+-commit 5cce4d45027cdab24c5bafa8d885f05f8a1c12be
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu May 30 19:23:08 2024 +0900
+-
+-    Implement Serilog Logging Configuration (Added file Logging and appsettings usage)
+-    
+-    - Modified `Program.cs` to integrate Serilog configuration from `appsettings.Development.json`:
+-    - Updated `appsettings.Development.json` to configure Serilog logging:
+-      - Removed old Logging section.
+-      - Added Serilog configuration with MinimumLevel overrides for Microsoft and EntityFrameworkCore namespaces.
+-      - Configured console logging with a specific output template.
+-      - Configured file logging with rolling intervals and size limits, using compact JSON formatter.
+-    
+-    Other notes / Take-aways
+-    
+-    - Serilog allows for advanced logging configurations, including different logging levels for various namespaces and multiple logging sinks (e.g., console, file).
+-    - The configuration in `appsettings.Development.json` is more flexible and maintainable compared to hardcoding the settings in `Program.cs`.
+-    - Using `rollingInterval` and `rollOnFileSizeLimit` in file logging ensures that log files are rotated based on time and size, preventing large log files from accumulating.
+-
+-commit 069a803a7606a5d7fd07704c81fd52c22dd2bcec
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu May 30 18:42:10 2024 +0900
+-
+-    Add Serilog logging to Restaurants API
+-    
+-    - Added Serilog.AspNetCore package reference to `Restaurants.API.csproj`.
+-    - Updated `Program.cs` to configure Serilog for logging:
+-      - Set up Serilog to log messages to the console.
+-      - Configured minimum log levels for different components, ensuring that important information is captured while avoiding excessive logging.
+-      - Used the `UseSerilogRequestLogging` method to automatically log details about HTTP requests, including their execution time and status codes.
+-    - Updated `ServiceCollectionExtensions` to enable sensitive data logging for the database context.
+-    - Modified command and query handlers to include detailed logging:
+-      - `CreateRestaurantCommandHandler` logs the creation process of a restaurant.
+-      - `DeleteRestaurantCommandHandler` logs the deletion process of a restaurant.
+-      - `UpdateRestaurantCommandHandler` logs the update process of a restaurant.
+-      - `GetRestaurantByIdQueryHandler` logs the process of retrieving a restaurant by its ID.
+-    - Enhanced `Restaurants.API.http` with updated DELETE requests for testing.
+-    
+-    Other notes / Take-aways
+-    
+-    - Utilized the `@` operator in Serilog messages to destructure objects, making log output more readable:
+-      - For example, `@RestaurantId` in a log message will include the detailed structure of the `RestaurantId` object rather than just its `ToString` representation, providing better context in the logs.
+-
+-commit 6995298ec6631f42381030d83c9a063ddd6ba65a
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu May 30 17:13:49 2024 +0900
+-
+-    Add update restaurant functionality with CQRS and MediatR
+-    
+-    - Created `UpdateRestaurantCommand` and `UpdateRestaurantCommandHandler` to handle the updating of restaurant entities.
+-    - Implemented `UpdateRestaurantCommandValidator` to enforce validation rules on `UpdateRestaurantCommand`.
+-    - Modified `RestaurantsController` to include the `UpdateRestaurant` action, leveraging MediatR to process the update command.
+-    - Updated `RestaurantsProfile` to include mappings for the `UpdateRestaurantCommand` class.
+-    - Added the `SaveChanges` method to `IRestaurantsRepository` and implemented it in `RestaurantsRepository`.
+-    - Updated `Restaurants.API.http` to include PATCH requests for testing the update restaurant functionality.
+-    - Folder and namespace refactoring (minor)
+-
+-commit 03998797cd5ab1d5503c3fce99bc780b17db816b
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Thu May 30 16:26:36 2024 +0900
+-
+-    Add delete restaurant functionality with CQRS and MediatR
+-    
+-    - Created `DeleteRestaurantCommand` and `DeleteRestaurantCommandHandler` to handle the deletion of restaurant entities.
+-    - Modified `RestaurantsController` to include the `DeleteRestaurant` action, leveraging MediatR to process the delete command.
+-    - Added the `Delete` method to `IRestaurantsRepository` for removing restaurant entities.
+-    - Implemented the `Delete` method in `RestaurantsRepository` to remove entities from the database.
+-    - Updated `Restaurants.API.http` to include a DELETE request for testing the delete restaurant functionality.
+-
+-commit fbda4798a6b6bb7616a1d4da32c7263e5661b630
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 29 21:05:12 2024 +0900
+-
+-    Refactor Restaurants API with CQRS and MediatR
+-    
+-    - Added MediatR package reference to `Restaurants.Application.csproj`.
+-    - Updated `ServiceCollectionExtensions` to include MediatR configurations and validator auto-registration.
+-    - Refactored `RestaurantsController` to use MediatR for handling requests:
+-      - Modified `GetAll` action to use `GetAllRestaurantsQuery`.
+-      - Updated `GetById` action to use `GetRestaurantByIdQuery`.
+-      - Refactored `CreateRestaurant` action to use `CreateRestaurantCommand`.
+-    - Created `CreateRestaurantCommand` and `CreateRestaurantCommandHandler` to handle restaurant creation logic.
+-    - Implemented `GetAllRestaurantsQuery` and `GetAllRestaurantsQueryHandler` for retrieving all restaurants.
+-    - Added `GetRestaurantByIdQuery` and `GetRestaurantByIdQueryHandler` for fetching a restaurant by its ID.
+-    - Created `CreateRestaurantCommandValidator` to enforce validation rules on `CreateRestaurantCommand`.
+-    - Updated `RestaurantsProfile` to include mappings for the new command and query classes.
+-    - Enhanced `Restaurants.API.http` with new test cases for valid and invalid restaurant creation requests.
+-
+-commit 8da4ccddfef454730beee16e90e575c37ef2aa22
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 29 18:20:16 2024 +0900
+-
+-    Implement FluentValidation for CreateRestaurantDto
+-    
+-    - Added FluentValidation.AspNetCore package and updated `Restaurants.Application.csproj` with its reference.
+-    - Modified `ServiceCollectionExtensions` for validator registration and auto-validation.
+-    - Refactored `CreateRestaurantDto` to use FluentValidation instead of data annotations.
+-    - Created `CreateRestaurantDtoValidator` for validation rules.
+-    - Added rules for `Name`, `Description`, `Category`, `ContactEmail`, and `PostalCode` properties with custom error messages for invalid inputs.
+-
+-commit ba6473bbc8a208040ace956d0d917752723afdaa
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 29 17:19:54 2024 +0900
+-
+-    Update Restaurant API and DTO to include validation
+-    
+-    - Added data annotations to the CreateRestaurantDto class for validation:
+-      - Set a string length requirement for the Name property.
+-      - Added a required attribute to the Category property.
+-      - Added an email format validation for ContactEmail.
+-      - Applied a phone number format validation for ContactNumber.
+-      - Set a regex pattern for PostalCode.
+-    - Modified Restaurants.API.http to test the new validation logic.
+-
+-commit a5075ed68cf7942243aa294dc86e868bc59eda9e
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 29 16:35:23 2024 +0900
+-
+-    Add Create Restaurant Functionality
+-    
+-    - Added `CreateRestaurantDto` to define the data structure for creating new restaurants.
+-    - Implemented `Create` method in `RestaurantsRepository` to add a new restaurant entity to the database.
+-    - Updated `IRestaurantsRepository` interface to include the `Create` method.
+-    - Created mapping configurations in `RestaurantsProfile` to map between `CreateRestaurantDto` and `Restaurant` entity.
+-    - Updated `RestaurantsService` to include `Create` method, handling the business logic for creating a new restaurant.
+-    - Modified `RestaurantsController` to include an API endpoint for creating a new restaurant.
+-    - Added POST request details in `Restaurants.API.http` for testing the new create restaurant API endpoint.
+-
+-commit 6cc6d8d87ea0ebad85c101c11875d85e608e30c9
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 29 12:32:55 2024 +0900
+-
+-    Installed AutoMapper and Implemented Necessary Profiles for DTOs
+-    
+-    - Added `AutoMapper` and `Microsoft.Extensions.Logging.Abstractions` package references to `Restaurants.Application.csproj`.
+-    - Implemented `DishDto` class to represent the dish data transfer object in `DishDto.cs`.
+-    - Created `DishesProfile` class to define the mapping between `Dish` and `DishDto` using AutoMapper in `DishesProfile.cs`.
+-    - Developed `RestaurantDto` class to represent the restaurant data transfer object in `RestaurantDto.cs`.
+-    - Added `RestaurantsProfile` class to configure AutoMapper mappings for `Restaurant` and `RestaurantDto` in `RestaurantsProfile.cs`.
+-    - Updated `ServiceCollectionExtensions.cs` to add AutoMapper configurations in the `AddApplication` method.
+-    - Modified `RestaurantService.cs` to include methods for retrieving restaurants and added AutoMapper integration for mapping entities to DTOs.
+-
+-commit a7bca74a88143e803f925158cf157c0117c3d482
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Mon May 27 01:38:37 2024 +0900
+-
+-    Feature: Implement GetRestaurantById
+-    
+-    - Added the ability to fetch a specific restaurant by its ID.
+-      - Updated the RestaurantsController to include a new endpoint for retrieving a restaurant by its ID.
+-      - The new endpoint in the controller calls the GetRestaurantById method in the RestaurantService.
+-      - Implemented the GetRestaurantById method in the RestaurantService, which interacts with the domain layer.
+-      - Updated the IRestaurantsRepository interface to include the GetRestaurantById method.
+-      - Implemented the GetRestaurantById method in the RestaurantsRepository class, which uses Entity Framework to query the database for a restaurant by its ID, including its related dishes.
+-
+-commit 6be798a36c7a8fdceed7d4e4b3bfd8a319d53e31
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Mon May 27 00:59:24 2024 +0900
+-
+-    Feature: Integrate Application Layer and Logging
+-    
+-    - Integrated the application layer into Program.cs (app startup file).
+-      - The application layer has its own ServiceCollectionExtensions file, responsible for exposing the necessary implementations to the presentation layer.
+-      - The application layer is responsible for business logic and interacts with the domain layer to retrieve or process data.
+-      - The domain layer defines the core entities, and it provides an interface (IRestaurantsRepository) for data operations.
+-      - The infrastructure layer implements the data operations defined by the domain layer's interface, using Entity Framework to interact with the database.
+-    - Implemented a method to get all restaurants.
+-      - The application layer's RestaurantService calls the domain layer's IRestaurantsRepository to fetch all restaurant data.
+-      - The domain layer's IRestaurantsRepository implementation in the infrastructure layer uses Entity Framework to query the database and return the data.
+-    - Included the logger package to enable logging messages to the console.
+-
+-commit 05e4c214e5a7e1138c1b962ee30c6ab7840e6f96
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Mon May 27 00:09:08 2024 +0900
+-
+-    Feature: Seed Data and Remove Weather Files
+-    
+-    - Added kiloCalories property to the Dish entity.
+-    - Implemented seeding for Restaurants and Dishes.
+-      - Created a dedicated seeder class to handle the seeding of data, maintaining separation of concerns.
+-      - Ensured that the data context is responsible only for data definition and schema, not the actual data population.
+-      - The seeder class initializes sample data for Restaurants and Dishes during application startup, ensuring the database is populated with initial data without embedding this logic in the data context itself.
+-    - Removed weather-related files and references from the project.
+-
+-commit b1e46a3214ac83b96c9c2dca2d1b9cbf621f3364
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 22 20:22:50 2024 +0900
+-
+-    Refactor: Make DbContext Accessible from Presentation Layer
+-    
+-    - Made the `DbContext` visible from the Presentation Layer (Restaurants.API).
+-    - Managed the database connection string inside the app settings file.
+-    
+-    Changes:
+-    - Updated `appsettings.Development.json` to include connection strings.
+-    - Modified `Program.cs` in Restaurants.API to configure the DbContext.
+-    - Updated `Restaurants.API.csproj` to include necessary project references and packages.
+-    - Refactored `RestaurantsDbContext` to use dependency injection.
+-    - Added `ServiceCollectionExtensions` to the infrastructure layer to manage service registrations.
+-
+-commit 8158c45a3e6e468928f781849587544429224a41
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 22 19:45:35 2024 +0900
+-
+-    Database Migration: Init
+-    
+-    - Performed the first database migration called "Init".
+-    - Added tables for Restaurants and Dishes.
+-    - Configured the database context so that Restaurants "own" an Address.
+-      - No new table is created for Address.
+-      - The Restaurants table contains fields for each property inside Address.
+-    - Note that only the Infrastructure project has the necessary package installed for using Entity Framework commands.
+-      - EF commands must be executed from the Infrastructure project.
+-
+-commit f4ef4dc8dc60226f96f2652c3279b2956863d64c
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 22 18:55:30 2024 +0900
+-
+-    Add Clean Architecture Projects
+-    
+-    - Added three new projects following Clean Architecture principles:
+-      - "Restaurants.Domain"
+-      - "Restaurants.Application"
+-      - "Restaurants.Infrastructure"
+-    - Structured dependencies:
+-      - The Application layer refers to the Domain layer.
+-      - The Presentation (API) and Infrastructure layers refer to the Application layer.
+-    - Added a few entities to the Domain layer.
+-
+-commit fe83a1b26a4a10cb4460ee894a8fb0d26752a17e
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 22 18:35:12 2024 +0900
+-
+-    Project Relocation
+-    
+-    - Renamed the API project name to "Restaurants-API" from "restaurants.api".
+-    - Moved project files to the new "Restaurants.API" folder.
+-
+-commit 00e2335327459ff25f62835bad455bdcd36d5a44
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 22 17:26:59 2024 +0900
+-
+-    Project Rename
+-    
+-    - Renamed the API project name to "Restaurants-API" from "restaurants.api".
+-
+-commit e93c31f9aa2b744dcfba4c241a1b9403a4ab842f
+-Author: Jason Gettys <jason@digital-knowledge.co.jp>
+-Date:   Wed May 22 16:59:00 2024 +0900
+-
+-    Initial Commit
+-    
+-    - Set up the project to run from both VS Code and Visual Studio 2022.
+-    - Added initial configuration and settings files.
+-    - Added a simple `restaurants-api.http` file to allow for in-IDE API calls for testing.
+-    - Configured the app to not open a browser when running in HTTPS.
+diff --git a/Docs/readme.txt b/Docs/readme.txt
+index d53e7d4..b3b650a 100644
+--- a/Docs/readme.txt
++++ b/Docs/readme.txt
+@@ -15,8 +15,8 @@ https://localhost:7186/swagger/index.html
+ 
+ 
+ ・Git Logs (From Restaurants.API Folder)
+-git diff --staged ':(exclude)Docs/*' > ../Docs/GitLogs/1_current_changes.txt
+-git log > ../Docs/GitLogs/2_all_commit_messages.txt
++git diff --staged ':(exclude)Docs/*' > ../../docs/git_logs/1_current_changes.txt
++git log > ../../docs/git_logs/2_all_commit_messages.txt
+     
+ ・Commit Prompt (set 1_current_changes.txt and 2_all_logs_newest_to_oldest.txt files as context)
+ Based on the content inside 1_current_changes.txt, please give me a thorough commit message in English.
+diff --git a/Restaurants.API/Restaurants.API.sln b/Restaurants.API/Restaurants.API.sln
+deleted file mode 100644
+index 998adfe..0000000
+--- a/Restaurants.API/Restaurants.API.sln
++++ /dev/null
+@@ -1,61 +0,0 @@
+-﻿
+-Microsoft Visual Studio Solution File, Format Version 12.00
+-# Visual Studio Version 17
+-VisualStudioVersion = 17.0.31903.59
+-MinimumVisualStudioVersion = 10.0.40219.1
+-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.API", "Restaurants.API.csproj", "{F35ABE87-FA59-4A1B-A03B-864654BE9559}"
+-EndProject
+-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Domain", "..\Restaurants.Domain\Restaurants.Domain.csproj", "{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}"
+-EndProject
+-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application", "..\Restaurants.Application\Restaurants.Application.csproj", "{6174B870-2C87-4A82-8C3A-25F86BB41434}"
+-EndProject
+-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Infrastructure", "..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj", "{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}"
+-EndProject
+-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application.Tests", "..\Restaurants.Application.Tests\Restaurants.Application.Tests.csproj", "{A12771FD-9E18-46B3-81E3-7966F12E6BD8}"
+-EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.Infrastructure.Tests", "..\Restaurants.Infrastructure.Tests\Restaurants.Infrastructure.Tests.csproj", "{92729516-8C33-4F2C-A93D-FF4DCA030B03}"
+-EndProject
+-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Restaurants.API.Tests", "..\Restaurants.API.Tests\Restaurants.API.Tests.csproj", "{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}"
+-EndProject
+-Global
+-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+-		Debug|Any CPU = Debug|Any CPU
+-		Release|Any CPU = Release|Any CPU
+-	EndGlobalSection
+-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+-		{F35ABE87-FA59-4A1B-A03B-864654BE9559}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{F35ABE87-FA59-4A1B-A03B-864654BE9559}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{F35ABE87-FA59-4A1B-A03B-864654BE9559}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{F35ABE87-FA59-4A1B-A03B-864654BE9559}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{DC9DB6DC-1B8E-4052-999D-5C4D2F6866A8}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{6174B870-2C87-4A82-8C3A-25F86BB41434}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{6174B870-2C87-4A82-8C3A-25F86BB41434}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{6174B870-2C87-4A82-8C3A-25F86BB41434}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{6174B870-2C87-4A82-8C3A-25F86BB41434}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{3B7B8DD0-755C-429B-A9E7-3C0C069BF054}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{A12771FD-9E18-46B3-81E3-7966F12E6BD8}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{92729516-8C33-4F2C-A93D-FF4DCA030B03}.Release|Any CPU.Build.0 = Release|Any CPU
+-		{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+-		{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+-		{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+-		{3FD4BA77-BDAE-43D1-B5A0-A92B036F18E6}.Release|Any CPU.Build.0 = Release|Any CPU
+-	EndGlobalSection
+-	GlobalSection(SolutionProperties) = preSolution
+-		HideSolutionNode = FALSE
+-	EndGlobalSection
+-	GlobalSection(ExtensibilityGlobals) = postSolution
+-		SolutionGuid = {27257A99-5002-4E7B-8183-D5CF3F6C75C4}
+-	EndGlobalSection
+-EndGlobal
+diff --git a/Restaurants.API/Controllers/DishesController.cs b/src/Restaurants.API/Controllers/DishesController.cs
+similarity index 100%
+rename from Restaurants.API/Controllers/DishesController.cs
+rename to src/Restaurants.API/Controllers/DishesController.cs
+diff --git a/Restaurants.API/Controllers/IdentityController.cs b/src/Restaurants.API/Controllers/IdentityController.cs
+similarity index 100%
+rename from Restaurants.API/Controllers/IdentityController.cs
+rename to src/Restaurants.API/Controllers/IdentityController.cs
+diff --git a/Restaurants.API/Controllers/RestaurantsController.cs b/src/Restaurants.API/Controllers/RestaurantsController.cs
+similarity index 100%
+rename from Restaurants.API/Controllers/RestaurantsController.cs
+rename to src/Restaurants.API/Controllers/RestaurantsController.cs
+diff --git a/Restaurants.API/Extensions/WebApplicationBuilderExtensions.cs b/src/Restaurants.API/Extensions/WebApplicationBuilderExtensions.cs
+similarity index 100%
+rename from Restaurants.API/Extensions/WebApplicationBuilderExtensions.cs
+rename to src/Restaurants.API/Extensions/WebApplicationBuilderExtensions.cs
+diff --git a/Restaurants.API/Middleware/ErrorHandlingMiddleware.cs b/src/Restaurants.API/Middleware/ErrorHandlingMiddleware.cs
+similarity index 100%
+rename from Restaurants.API/Middleware/ErrorHandlingMiddleware.cs
+rename to src/Restaurants.API/Middleware/ErrorHandlingMiddleware.cs
+diff --git a/Restaurants.API/Middleware/RequestTimeLoggingMiddleware.cs b/src/Restaurants.API/Middleware/RequestTimeLoggingMiddleware.cs
+similarity index 100%
+rename from Restaurants.API/Middleware/RequestTimeLoggingMiddleware.cs
+rename to src/Restaurants.API/Middleware/RequestTimeLoggingMiddleware.cs
+diff --git a/Restaurants.API/Program.cs b/src/Restaurants.API/Program.cs
+similarity index 100%
+rename from Restaurants.API/Program.cs
+rename to src/Restaurants.API/Program.cs
+diff --git a/Restaurants.API/Properties/launchSettings.json b/src/Restaurants.API/Properties/launchSettings.json
+similarity index 100%
+rename from Restaurants.API/Properties/launchSettings.json
+rename to src/Restaurants.API/Properties/launchSettings.json
+diff --git a/Restaurants.API/Restaurants.API.csproj b/src/Restaurants.API/Restaurants.API.csproj
+similarity index 77%
+rename from Restaurants.API/Restaurants.API.csproj
+rename to src/Restaurants.API/Restaurants.API.csproj
+index f4bf499..b8a5fe6 100644
+--- a/Restaurants.API/Restaurants.API.csproj
++++ b/src/Restaurants.API/Restaurants.API.csproj
+@@ -8,8 +8,8 @@
+   </PropertyGroup>
+ 
+   <ItemGroup>
+-    <ProjectReference Include="..\Restaurants.Application\Restaurants.Application.csproj" />
+-    <ProjectReference Include="..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj" />
++    <ProjectReference Include="..\..\src\Restaurants.Application\Restaurants.Application.csproj" />
++    <ProjectReference Include="..\..\src\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj" />
+   </ItemGroup>
+ 
+ 	<ItemGroup>
+diff --git a/Restaurants.API/Restaurants.API.http b/src/Restaurants.API/Restaurants.API.http
+similarity index 100%
+rename from Restaurants.API/Restaurants.API.http
+rename to src/Restaurants.API/Restaurants.API.http
+diff --git a/src/Restaurants.API/Restaurants.API.sln b/src/Restaurants.API/Restaurants.API.sln
+new file mode 100644
+index 0000000..0710755
+--- /dev/null
++++ b/src/Restaurants.API/Restaurants.API.sln
+@@ -0,0 +1,74 @@
++﻿
++Microsoft Visual Studio Solution File, Format Version 12.00
++# Visual Studio Version 17
++VisualStudioVersion = 17.0.31903.59
++MinimumVisualStudioVersion = 10.0.40219.1
++Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{753FA5D3-A2CE-4696-9588-31AB82A1B4FC}"
++EndProject
++Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{19CA28C8-0B02-4DA8-82F7-7B3290925B18}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.API", "Restaurants.API.csproj", "{CFA52B41-DCEA-488B-9D85-71CB0A26E46F}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application", "..\Restaurants.Application\Restaurants.Application.csproj", "{2268CE82-E011-4BC6-9A06-9E8B4E0E2E08}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Domain", "..\Restaurants.Domain\Restaurants.Domain.csproj", "{1AD3C746-4A0F-4FB3-A9CA-69F50479CE54}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Infrastructure", "..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj", "{4F7E2AC9-A322-4811-BCBB-0AEFA42E68F8}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.API.Tests", "..\..\tests\Restaurants.API.Tests\Restaurants.API.Tests.csproj", "{AB961511-7018-4C2D-A9B8-9295DE0330E1}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Application.Tests", "..\..\tests\Restaurants.Application.Tests\Restaurants.Application.Tests.csproj", "{E2125203-78D1-4975-9D92-728EA669A236}"
++EndProject
++Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Restaurants.Infrastructure.Tests", "..\..\tests\Restaurants.Infrastructure.Tests\Restaurants.Infrastructure.Tests.csproj", "{2A784B5D-6900-488B-84F8-5FDA8703E094}"
++EndProject
++Global
++	GlobalSection(SolutionConfigurationPlatforms) = preSolution
++		Debug|Any CPU = Debug|Any CPU
++		Release|Any CPU = Release|Any CPU
++	EndGlobalSection
++	GlobalSection(ProjectConfigurationPlatforms) = postSolution
++		{CFA52B41-DCEA-488B-9D85-71CB0A26E46F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{CFA52B41-DCEA-488B-9D85-71CB0A26E46F}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{CFA52B41-DCEA-488B-9D85-71CB0A26E46F}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{CFA52B41-DCEA-488B-9D85-71CB0A26E46F}.Release|Any CPU.Build.0 = Release|Any CPU
++		{2268CE82-E011-4BC6-9A06-9E8B4E0E2E08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{2268CE82-E011-4BC6-9A06-9E8B4E0E2E08}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{2268CE82-E011-4BC6-9A06-9E8B4E0E2E08}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{2268CE82-E011-4BC6-9A06-9E8B4E0E2E08}.Release|Any CPU.Build.0 = Release|Any CPU
++		{1AD3C746-4A0F-4FB3-A9CA-69F50479CE54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{1AD3C746-4A0F-4FB3-A9CA-69F50479CE54}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{1AD3C746-4A0F-4FB3-A9CA-69F50479CE54}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{1AD3C746-4A0F-4FB3-A9CA-69F50479CE54}.Release|Any CPU.Build.0 = Release|Any CPU
++		{4F7E2AC9-A322-4811-BCBB-0AEFA42E68F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{4F7E2AC9-A322-4811-BCBB-0AEFA42E68F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{4F7E2AC9-A322-4811-BCBB-0AEFA42E68F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{4F7E2AC9-A322-4811-BCBB-0AEFA42E68F8}.Release|Any CPU.Build.0 = Release|Any CPU
++		{AB961511-7018-4C2D-A9B8-9295DE0330E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{AB961511-7018-4C2D-A9B8-9295DE0330E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{AB961511-7018-4C2D-A9B8-9295DE0330E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{AB961511-7018-4C2D-A9B8-9295DE0330E1}.Release|Any CPU.Build.0 = Release|Any CPU
++		{E2125203-78D1-4975-9D92-728EA669A236}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{E2125203-78D1-4975-9D92-728EA669A236}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{E2125203-78D1-4975-9D92-728EA669A236}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{E2125203-78D1-4975-9D92-728EA669A236}.Release|Any CPU.Build.0 = Release|Any CPU
++		{2A784B5D-6900-488B-84F8-5FDA8703E094}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
++		{2A784B5D-6900-488B-84F8-5FDA8703E094}.Debug|Any CPU.Build.0 = Debug|Any CPU
++		{2A784B5D-6900-488B-84F8-5FDA8703E094}.Release|Any CPU.ActiveCfg = Release|Any CPU
++		{2A784B5D-6900-488B-84F8-5FDA8703E094}.Release|Any CPU.Build.0 = Release|Any CPU
++	EndGlobalSection
++	GlobalSection(SolutionProperties) = preSolution
++		HideSolutionNode = FALSE
++	EndGlobalSection
++	GlobalSection(NestedProjects) = preSolution
++		{CFA52B41-DCEA-488B-9D85-71CB0A26E46F} = {19CA28C8-0B02-4DA8-82F7-7B3290925B18}
++		{2268CE82-E011-4BC6-9A06-9E8B4E0E2E08} = {19CA28C8-0B02-4DA8-82F7-7B3290925B18}
++		{1AD3C746-4A0F-4FB3-A9CA-69F50479CE54} = {19CA28C8-0B02-4DA8-82F7-7B3290925B18}
++		{4F7E2AC9-A322-4811-BCBB-0AEFA42E68F8} = {19CA28C8-0B02-4DA8-82F7-7B3290925B18}
++		{AB961511-7018-4C2D-A9B8-9295DE0330E1} = {753FA5D3-A2CE-4696-9588-31AB82A1B4FC}
++		{E2125203-78D1-4975-9D92-728EA669A236} = {753FA5D3-A2CE-4696-9588-31AB82A1B4FC}
++		{2A784B5D-6900-488B-84F8-5FDA8703E094} = {753FA5D3-A2CE-4696-9588-31AB82A1B4FC}
++	EndGlobalSection
++	GlobalSection(ExtensibilityGlobals) = postSolution
++		SolutionGuid = {27257A99-5002-4E7B-8183-D5CF3F6C75C4}
++	EndGlobalSection
++EndGlobal
+diff --git a/Restaurants.API/appsettings.Development.json b/src/Restaurants.API/appsettings.Development.json
+similarity index 100%
+rename from Restaurants.API/appsettings.Development.json
+rename to src/Restaurants.API/appsettings.Development.json
+diff --git a/Restaurants.API/appsettings.json b/src/Restaurants.API/appsettings.json
+similarity index 100%
+rename from Restaurants.API/appsettings.json
+rename to src/Restaurants.API/appsettings.json
+diff --git a/Restaurants.Application/Common/PagedResult.cs b/src/Restaurants.Application/Common/PagedResult.cs
+similarity index 100%
+rename from Restaurants.Application/Common/PagedResult.cs
+rename to src/Restaurants.Application/Common/PagedResult.cs
+diff --git a/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommand.cs b/src/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommand.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommand.cs
+rename to src/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommand.cs
+diff --git a/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommandHandler.cs b/src/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommandHandler.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommandHandler.cs
+rename to src/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommandHandler.cs
+diff --git a/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommandValidator.cs b/src/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommandValidator.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommandValidator.cs
+rename to src/Restaurants.Application/Dishes/Commands/CreateDish/CreateDishCommandValidator.cs
+diff --git a/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommand.cs b/src/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommand.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommand.cs
+rename to src/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommand.cs
+diff --git a/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommandHandler.cs b/src/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommandHandler.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommandHandler.cs
+rename to src/Restaurants.Application/Dishes/Commands/DeleteDishes/DeleteDishesForRestaurantCommandHandler.cs
+diff --git a/Restaurants.Application/Dishes/Dtos/DishDto.cs b/src/Restaurants.Application/Dishes/Dtos/DishDto.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Dtos/DishDto.cs
+rename to src/Restaurants.Application/Dishes/Dtos/DishDto.cs
+diff --git a/Restaurants.Application/Dishes/Dtos/DishesProfile.cs b/src/Restaurants.Application/Dishes/Dtos/DishesProfile.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Dtos/DishesProfile.cs
+rename to src/Restaurants.Application/Dishes/Dtos/DishesProfile.cs
+diff --git a/Restaurants.Application/Dishes/Queries/GetDishByIdForRestaurant/GetDishByIdForRestaurantQuery.cs b/src/Restaurants.Application/Dishes/Queries/GetDishByIdForRestaurant/GetDishByIdForRestaurantQuery.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Queries/GetDishByIdForRestaurant/GetDishByIdForRestaurantQuery.cs
+rename to src/Restaurants.Application/Dishes/Queries/GetDishByIdForRestaurant/GetDishByIdForRestaurantQuery.cs
+diff --git a/Restaurants.Application/Dishes/Queries/GetDishByIdForRestaurant/GetDishByIdForRestaurantQueryHandler.cs b/src/Restaurants.Application/Dishes/Queries/GetDishByIdForRestaurant/GetDishByIdForRestaurantQueryHandler.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Queries/GetDishByIdForRestaurant/GetDishByIdForRestaurantQueryHandler.cs
+rename to src/Restaurants.Application/Dishes/Queries/GetDishByIdForRestaurant/GetDishByIdForRestaurantQueryHandler.cs
+diff --git a/Restaurants.Application/Dishes/Queries/GetDishesForRestaurant/GetDishesForRestaurantQuery.cs b/src/Restaurants.Application/Dishes/Queries/GetDishesForRestaurant/GetDishesForRestaurantQuery.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Queries/GetDishesForRestaurant/GetDishesForRestaurantQuery.cs
+rename to src/Restaurants.Application/Dishes/Queries/GetDishesForRestaurant/GetDishesForRestaurantQuery.cs
+diff --git a/Restaurants.Application/Dishes/Queries/GetDishesForRestaurant/GetDishesForRestaurantQueryHandler.cs b/src/Restaurants.Application/Dishes/Queries/GetDishesForRestaurant/GetDishesForRestaurantQueryHandler.cs
+similarity index 100%
+rename from Restaurants.Application/Dishes/Queries/GetDishesForRestaurant/GetDishesForRestaurantQueryHandler.cs
+rename to src/Restaurants.Application/Dishes/Queries/GetDishesForRestaurant/GetDishesForRestaurantQueryHandler.cs
+diff --git a/Restaurants.Application/Extensions/ServiceCollectionExtensions.cs b/src/Restaurants.Application/Extensions/ServiceCollectionExtensions.cs
+similarity index 100%
+rename from Restaurants.Application/Extensions/ServiceCollectionExtensions.cs
+rename to src/Restaurants.Application/Extensions/ServiceCollectionExtensions.cs
+diff --git a/Restaurants.Application/Restaurants.Application.csproj b/src/Restaurants.Application/Restaurants.Application.csproj
+similarity index 86%
+rename from Restaurants.Application/Restaurants.Application.csproj
+rename to src/Restaurants.Application/Restaurants.Application.csproj
+index d880e4e..71bfd73 100644
+--- a/Restaurants.Application/Restaurants.Application.csproj
++++ b/src/Restaurants.Application/Restaurants.Application.csproj
+@@ -7,7 +7,7 @@
+   </PropertyGroup>
+ 
+   <ItemGroup>
+-    <ProjectReference Include="..\Restaurants.Domain\Restaurants.Domain.csproj" />
++    <ProjectReference Include="..\..\src\Restaurants.Domain\Restaurants.Domain.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs b/src/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs
+similarity index 100%
+rename from Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs
+rename to src/Restaurants.Application/Restaurants/Commands/CreateRestaurantCommand.cs
+diff --git a/Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs b/src/Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
+similarity index 100%
+rename from Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
+rename to src/Restaurants.Application/Restaurants/Commands/DeleteRestaurantCommand.cs
+diff --git a/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs b/src/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
+similarity index 100%
+rename from Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
+rename to src/Restaurants.Application/Restaurants/Commands/UpdateRestaurantCommand.cs
+diff --git a/Restaurants.Application/Restaurants/Dtos/RestaurantDto.cs b/src/Restaurants.Application/Restaurants/Dtos/RestaurantDto.cs
+similarity index 100%
+rename from Restaurants.Application/Restaurants/Dtos/RestaurantDto.cs
+rename to src/Restaurants.Application/Restaurants/Dtos/RestaurantDto.cs
+diff --git a/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs b/src/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
+similarity index 100%
+rename from Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
+rename to src/Restaurants.Application/Restaurants/Dtos/RestaurantsProfile.cs
+diff --git a/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs b/src/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs
+similarity index 100%
+rename from Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs
+rename to src/Restaurants.Application/Restaurants/Queries/GetAllRestaurantsQuery.cs
+diff --git a/Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs b/src/Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
+similarity index 100%
+rename from Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
+rename to src/Restaurants.Application/Restaurants/Queries/GetRestaurantByIdQuery.cs
+diff --git a/Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs b/src/Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
+similarity index 100%
+rename from Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
+rename to src/Restaurants.Application/Users/Commands/AssignUserRoleCommand.cs
+diff --git a/Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs b/src/Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
+similarity index 100%
+rename from Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
+rename to src/Restaurants.Application/Users/Commands/UnassignUserRoleCommand.cs
+diff --git a/Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs b/src/Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
+similarity index 100%
+rename from Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
+rename to src/Restaurants.Application/Users/Commands/UpdateUserDetailsCommand.cs
+diff --git a/Restaurants.Application/Users/CurrentUser.cs b/src/Restaurants.Application/Users/CurrentUser.cs
+similarity index 100%
+rename from Restaurants.Application/Users/CurrentUser.cs
+rename to src/Restaurants.Application/Users/CurrentUser.cs
+diff --git a/Restaurants.Application/Users/UserContext.cs b/src/Restaurants.Application/Users/UserContext.cs
+similarity index 100%
+rename from Restaurants.Application/Users/UserContext.cs
+rename to src/Restaurants.Application/Users/UserContext.cs
+diff --git a/Restaurants.Domain/Constants/ResourceOperation.cs b/src/Restaurants.Domain/Constants/ResourceOperation.cs
+similarity index 100%
+rename from Restaurants.Domain/Constants/ResourceOperation.cs
+rename to src/Restaurants.Domain/Constants/ResourceOperation.cs
+diff --git a/Restaurants.Domain/Constants/SortDirection.cs b/src/Restaurants.Domain/Constants/SortDirection.cs
+similarity index 100%
+rename from Restaurants.Domain/Constants/SortDirection.cs
+rename to src/Restaurants.Domain/Constants/SortDirection.cs
+diff --git a/Restaurants.Domain/Constants/UserRoles.cs b/src/Restaurants.Domain/Constants/UserRoles.cs
+similarity index 100%
+rename from Restaurants.Domain/Constants/UserRoles.cs
+rename to src/Restaurants.Domain/Constants/UserRoles.cs
+diff --git a/Restaurants.Domain/Entities/Address.cs b/src/Restaurants.Domain/Entities/Address.cs
+similarity index 100%
+rename from Restaurants.Domain/Entities/Address.cs
+rename to src/Restaurants.Domain/Entities/Address.cs
+diff --git a/Restaurants.Domain/Entities/Dish.cs b/src/Restaurants.Domain/Entities/Dish.cs
+similarity index 100%
+rename from Restaurants.Domain/Entities/Dish.cs
+rename to src/Restaurants.Domain/Entities/Dish.cs
+diff --git a/Restaurants.Domain/Entities/Restaurants.cs b/src/Restaurants.Domain/Entities/Restaurants.cs
+similarity index 100%
+rename from Restaurants.Domain/Entities/Restaurants.cs
+rename to src/Restaurants.Domain/Entities/Restaurants.cs
+diff --git a/Restaurants.Domain/Entities/User.cs b/src/Restaurants.Domain/Entities/User.cs
+similarity index 100%
+rename from Restaurants.Domain/Entities/User.cs
+rename to src/Restaurants.Domain/Entities/User.cs
+diff --git a/Restaurants.Domain/Exceptions/ForbidException.cs b/src/Restaurants.Domain/Exceptions/ForbidException.cs
+similarity index 100%
+rename from Restaurants.Domain/Exceptions/ForbidException.cs
+rename to src/Restaurants.Domain/Exceptions/ForbidException.cs
+diff --git a/Restaurants.Domain/Exceptions/NotFoundException.cs b/src/Restaurants.Domain/Exceptions/NotFoundException.cs
+similarity index 100%
+rename from Restaurants.Domain/Exceptions/NotFoundException.cs
+rename to src/Restaurants.Domain/Exceptions/NotFoundException.cs
+diff --git a/Restaurants.Domain/Interfaces/IRestaurantAuthorizationService.cs b/src/Restaurants.Domain/Interfaces/IRestaurantAuthorizationService.cs
+similarity index 100%
+rename from Restaurants.Domain/Interfaces/IRestaurantAuthorizationService.cs
+rename to src/Restaurants.Domain/Interfaces/IRestaurantAuthorizationService.cs
+diff --git a/Restaurants.Domain/Repositories/IDishesRepository.cs b/src/Restaurants.Domain/Repositories/IDishesRepository.cs
+similarity index 100%
+rename from Restaurants.Domain/Repositories/IDishesRepository.cs
+rename to src/Restaurants.Domain/Repositories/IDishesRepository.cs
+diff --git a/Restaurants.Domain/Repositories/IRestaurantsRepository.cs b/src/Restaurants.Domain/Repositories/IRestaurantsRepository.cs
+similarity index 100%
+rename from Restaurants.Domain/Repositories/IRestaurantsRepository.cs
+rename to src/Restaurants.Domain/Repositories/IRestaurantsRepository.cs
+diff --git a/Restaurants.Domain/Restaurants.Domain.csproj b/src/Restaurants.Domain/Restaurants.Domain.csproj
+similarity index 100%
+rename from Restaurants.Domain/Restaurants.Domain.csproj
+rename to src/Restaurants.Domain/Restaurants.Domain.csproj
+diff --git a/Restaurants.Infrastructure/Authorization/Constants.cs b/src/Restaurants.Infrastructure/Authorization/Constants.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Authorization/Constants.cs
+rename to src/Restaurants.Infrastructure/Authorization/Constants.cs
+diff --git a/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs b/src/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs
+rename to src/Restaurants.Infrastructure/Authorization/Requirements/CreatedMultipleRestaurantsRequirement.cs
+diff --git a/Restaurants.Infrastructure/Authorization/Requirements/MinimumAgeRequirement.cs b/src/Restaurants.Infrastructure/Authorization/Requirements/MinimumAgeRequirement.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Authorization/Requirements/MinimumAgeRequirement.cs
+rename to src/Restaurants.Infrastructure/Authorization/Requirements/MinimumAgeRequirement.cs
+diff --git a/Restaurants.Infrastructure/Authorization/Requirements/MinimumAgeRequirementHandler.cs b/src/Restaurants.Infrastructure/Authorization/Requirements/MinimumAgeRequirementHandler.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Authorization/Requirements/MinimumAgeRequirementHandler.cs
+rename to src/Restaurants.Infrastructure/Authorization/Requirements/MinimumAgeRequirementHandler.cs
+diff --git a/Restaurants.Infrastructure/Authorization/RestaurantsUserClaimsPrincipalFactory.cs b/src/Restaurants.Infrastructure/Authorization/RestaurantsUserClaimsPrincipalFactory.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Authorization/RestaurantsUserClaimsPrincipalFactory.cs
+rename to src/Restaurants.Infrastructure/Authorization/RestaurantsUserClaimsPrincipalFactory.cs
+diff --git a/Restaurants.Infrastructure/Authorization/Services/RestaurantAuthorizationService.cs b/src/Restaurants.Infrastructure/Authorization/Services/RestaurantAuthorizationService.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Authorization/Services/RestaurantAuthorizationService.cs
+rename to src/Restaurants.Infrastructure/Authorization/Services/RestaurantAuthorizationService.cs
+diff --git a/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs b/src/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
+rename to src/Restaurants.Infrastructure/Extensions/ServiceCollectionExtensions.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240522102917_Init.Designer.cs b/src/Restaurants.Infrastructure/Migrations/20240522102917_Init.Designer.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240522102917_Init.Designer.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240522102917_Init.Designer.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240522102917_Init.cs b/src/Restaurants.Infrastructure/Migrations/20240522102917_Init.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240522102917_Init.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240522102917_Init.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240526145228_AddKiloCaloriesToDish.Designer.cs b/src/Restaurants.Infrastructure/Migrations/20240526145228_AddKiloCaloriesToDish.Designer.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240526145228_AddKiloCaloriesToDish.Designer.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240526145228_AddKiloCaloriesToDish.Designer.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240526145228_AddKiloCaloriesToDish.cs b/src/Restaurants.Infrastructure/Migrations/20240526145228_AddKiloCaloriesToDish.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240526145228_AddKiloCaloriesToDish.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240526145228_AddKiloCaloriesToDish.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240603142813_AddDotnetCoreIdentity.Designer.cs b/src/Restaurants.Infrastructure/Migrations/20240603142813_AddDotnetCoreIdentity.Designer.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240603142813_AddDotnetCoreIdentity.Designer.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240603142813_AddDotnetCoreIdentity.Designer.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240603142813_AddDotnetCoreIdentity.cs b/src/Restaurants.Infrastructure/Migrations/20240603142813_AddDotnetCoreIdentity.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240603142813_AddDotnetCoreIdentity.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240603142813_AddDotnetCoreIdentity.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240629143307_AddAdditionalUserProperties.Designer.cs b/src/Restaurants.Infrastructure/Migrations/20240629143307_AddAdditionalUserProperties.Designer.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240629143307_AddAdditionalUserProperties.Designer.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240629143307_AddAdditionalUserProperties.Designer.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240629143307_AddAdditionalUserProperties.cs b/src/Restaurants.Infrastructure/Migrations/20240629143307_AddAdditionalUserProperties.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240629143307_AddAdditionalUserProperties.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240629143307_AddAdditionalUserProperties.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240711104149_AddRestaurantOwner.Designer.cs b/src/Restaurants.Infrastructure/Migrations/20240711104149_AddRestaurantOwner.Designer.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240711104149_AddRestaurantOwner.Designer.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240711104149_AddRestaurantOwner.Designer.cs
+diff --git a/Restaurants.Infrastructure/Migrations/20240711104149_AddRestaurantOwner.cs b/src/Restaurants.Infrastructure/Migrations/20240711104149_AddRestaurantOwner.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/20240711104149_AddRestaurantOwner.cs
+rename to src/Restaurants.Infrastructure/Migrations/20240711104149_AddRestaurantOwner.cs
+diff --git a/Restaurants.Infrastructure/Migrations/RestaurantsDbContextModelSnapshot.cs b/src/Restaurants.Infrastructure/Migrations/RestaurantsDbContextModelSnapshot.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Migrations/RestaurantsDbContextModelSnapshot.cs
+rename to src/Restaurants.Infrastructure/Migrations/RestaurantsDbContextModelSnapshot.cs
+diff --git a/Restaurants.Infrastructure/Persistence/RestaurantsDbContext.cs b/src/Restaurants.Infrastructure/Persistence/RestaurantsDbContext.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Persistence/RestaurantsDbContext.cs
+rename to src/Restaurants.Infrastructure/Persistence/RestaurantsDbContext.cs
+diff --git a/Restaurants.Infrastructure/Repositories/DishesRepository.cs b/src/Restaurants.Infrastructure/Repositories/DishesRepository.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Repositories/DishesRepository.cs
+rename to src/Restaurants.Infrastructure/Repositories/DishesRepository.cs
+diff --git a/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs b/src/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
+rename to src/Restaurants.Infrastructure/Repositories/RestaurantsRepository.cs
+diff --git a/Restaurants.Infrastructure/Restaurants.Infrastructure.csproj b/src/Restaurants.Infrastructure/Restaurants.Infrastructure.csproj
+similarity index 85%
+rename from Restaurants.Infrastructure/Restaurants.Infrastructure.csproj
+rename to src/Restaurants.Infrastructure/Restaurants.Infrastructure.csproj
+index 49b762a..512f2f2 100644
+--- a/Restaurants.Infrastructure/Restaurants.Infrastructure.csproj
++++ b/src/Restaurants.Infrastructure/Restaurants.Infrastructure.csproj
+@@ -7,7 +7,7 @@
+   </PropertyGroup>
+ 
+   <ItemGroup>
+-    <ProjectReference Include="..\Restaurants.Application\Restaurants.Application.csproj" />
++    <ProjectReference Include="..\..\src\Restaurants.Application\Restaurants.Application.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/Restaurants.Infrastructure/Seeders/RestaurantSeeder.cs b/src/Restaurants.Infrastructure/Seeders/RestaurantSeeder.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/Seeders/RestaurantSeeder.cs
+rename to src/Restaurants.Infrastructure/Seeders/RestaurantSeeder.cs
+diff --git a/Restaurants.Infrastructure/assembly.cs b/src/Restaurants.Infrastructure/assembly.cs
+similarity index 100%
+rename from Restaurants.Infrastructure/assembly.cs
+rename to src/Restaurants.Infrastructure/assembly.cs
+diff --git a/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs b/tests/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
+similarity index 100%
+rename from Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
+rename to tests/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
+diff --git a/Restaurants.API.Tests/FakePolicyEvaluator.cs b/tests/Restaurants.API.Tests/FakePolicyEvaluator.cs
+similarity index 100%
+rename from Restaurants.API.Tests/FakePolicyEvaluator.cs
+rename to tests/Restaurants.API.Tests/FakePolicyEvaluator.cs
+diff --git a/Restaurants.API.Tests/Middleware/ErrorHandlingMiddlewareTests.cs b/tests/Restaurants.API.Tests/Middleware/ErrorHandlingMiddlewareTests.cs
+similarity index 100%
+rename from Restaurants.API.Tests/Middleware/ErrorHandlingMiddlewareTests.cs
+rename to tests/Restaurants.API.Tests/Middleware/ErrorHandlingMiddlewareTests.cs
+diff --git a/Restaurants.API.Tests/Restaurants.API.Tests.csproj b/tests/Restaurants.API.Tests/Restaurants.API.Tests.csproj
+similarity index 90%
+rename from Restaurants.API.Tests/Restaurants.API.Tests.csproj
+rename to tests/Restaurants.API.Tests/Restaurants.API.Tests.csproj
+index f1fbefd..a50b70d 100644
+--- a/Restaurants.API.Tests/Restaurants.API.Tests.csproj
++++ b/tests/Restaurants.API.Tests/Restaurants.API.Tests.csproj
+@@ -1,4 +1,4 @@
+-<Project Sdk="Microsoft.NET.Sdk">
++﻿<Project Sdk="Microsoft.NET.Sdk">
+ 
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+@@ -23,7 +23,7 @@
+   </ItemGroup>
+ 
+   <ItemGroup>
+-    <ProjectReference Include="..\Restaurants.API\Restaurants.API.csproj" />
++    <ProjectReference Include="..\..\src\Restaurants.API\Restaurants.API.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj b/tests/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
+similarity index 87%
+rename from Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
+rename to tests/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
+index 887c43f..2ef7d42 100644
+--- a/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
++++ b/tests/Restaurants.Application.Tests/Restaurants.Application.Tests.csproj
+@@ -1,4 +1,4 @@
+-<Project Sdk="Microsoft.NET.Sdk">
++﻿<Project Sdk="Microsoft.NET.Sdk">
+ 
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+@@ -21,7 +21,7 @@
+   </ItemGroup>
+ 
+   <ItemGroup>
+-    <ProjectReference Include="..\Restaurants.Application\Restaurants.Application.csproj" />
++    <ProjectReference Include="..\..\src\Restaurants.Application\Restaurants.Application.csproj" />
+   </ItemGroup>
+ 
+   <ItemGroup>
+diff --git a/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs b/tests/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs
+similarity index 100%
+rename from Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs
+rename to tests/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandHandlerTests.cs
+diff --git a/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs b/tests/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs
+similarity index 100%
+rename from Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs
+rename to tests/Restaurants.Application.Tests/Restaurants/Commands/CreateRestaurantCommandValidatorTests.cs
+diff --git a/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs b/tests/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs
+similarity index 100%
+rename from Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs
+rename to tests/Restaurants.Application.Tests/Restaurants/Commands/UpdateRestaurantCommandHandlerTests.cs
+diff --git a/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs b/tests/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs
+similarity index 100%
+rename from Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs
+rename to tests/Restaurants.Application.Tests/Restaurants/Dtos/RestaurantsProfileTests.cs
+diff --git a/Restaurants.Application.Tests/Users/CurrentUserTests.cs b/tests/Restaurants.Application.Tests/Users/CurrentUserTests.cs
+similarity index 100%
+rename from Restaurants.Application.Tests/Users/CurrentUserTests.cs
+rename to tests/Restaurants.Application.Tests/Users/CurrentUserTests.cs
+diff --git a/Restaurants.Application.Tests/Users/UserContextTests.cs b/tests/Restaurants.Application.Tests/Users/UserContextTests.cs
+similarity index 100%
+rename from Restaurants.Application.Tests/Users/UserContextTests.cs
+rename to tests/Restaurants.Application.Tests/Users/UserContextTests.cs
+diff --git a/Restaurants.Infrastructure.Tests/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandlerTests.cs b/tests/Restaurants.Infrastructure.Tests/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandlerTests.cs
+similarity index 100%
+rename from Restaurants.Infrastructure.Tests/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandlerTests.cs
+rename to tests/Restaurants.Infrastructure.Tests/Authorization/Requirements/CreatedMultipleRestaurantsRequirementHandlerTests.cs
+diff --git a/Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj b/tests/Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj
+similarity index 87%
+rename from Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj
+rename to tests/Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj
+index 71a964a..78a74f5 100644
+--- a/Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj
++++ b/tests/Restaurants.Infrastructure.Tests/Restaurants.Infrastructure.Tests.csproj
+@@ -1,4 +1,4 @@
+-<Project Sdk="Microsoft.NET.Sdk">
++﻿<Project Sdk="Microsoft.NET.Sdk">
+ 
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+@@ -21,7 +21,7 @@
+   </ItemGroup>
+ 
+   <ItemGroup>
+-    <ProjectReference Include="..\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj" />
++    <ProjectReference Include="..\..\src\Restaurants.Infrastructure\Restaurants.Infrastructure.csproj" />
+   </ItemGroup>  
+ 
+   <ItemGroup>

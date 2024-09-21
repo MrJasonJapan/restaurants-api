@@ -15,8 +15,8 @@ https://localhost:7186/swagger/index.html
 
 
 ・Git Logs (From Restaurants.API Folder)
-git diff --staged ':(exclude)Docs/*' > ../Docs/GitLogs/1_current_changes.txt
-git log > ../Docs/GitLogs/2_all_commit_messages.txt
+git diff --staged ':(exclude)Docs/*' > ../../docs/git_logs/1_current_changes.txt
+git log > ../../docs/git_logs/2_all_commit_messages.txt
     
 ・Commit Prompt (set 1_current_changes.txt and 2_all_logs_newest_to_oldest.txt files as context)
 Based on the content inside 1_current_changes.txt, please give me a thorough commit message in English.

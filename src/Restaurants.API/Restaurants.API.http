@@ -15,7 +15,7 @@ POST {{Restaurants.API_HostAddress}}/api/identity/login
 Content-Type: application/json
 
 {
-    "email": "owner2@test.com",
+    "email": "owner@test.com",
     "password": "Password1!"
 }
 
