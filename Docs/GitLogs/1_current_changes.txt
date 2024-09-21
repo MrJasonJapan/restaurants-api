@@ -1,120 +1,137 @@
 diff --git a/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs b/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
-new file mode 100644
-index 0000000..36a31d5
---- /dev/null
+index 36a31d5..ab832e4 100644
+--- a/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
 +++ b/Restaurants.API.Tests/Controllers/RestaurantsControllerTests.cs
-@@ -0,0 +1,49 @@
-+using System.Net;
-+using FluentAssertions;
-+using Microsoft.AspNetCore.Mvc.Testing;
-+using Xunit;
+@@ -1,6 +1,16 @@
+ using System.Net;
++using System.Net.Http.Json;
+ using FluentAssertions;
++using Microsoft.AspNetCore.Authorization.Policy;
+ using Microsoft.AspNetCore.Mvc.Testing;
++using Microsoft.AspNetCore.TestHost;
++using Microsoft.Extensions.DependencyInjection;
++using Microsoft.Extensions.DependencyInjection.Extensions;
++using Moq;
++using Restaurants.API.Tests;
++using Restaurants.Application.Restaurants.Dtos;
++using Restaurants.Domain.Entities;
++using Restaurants.Domain.Repositories;
+ using Xunit;
+ 
+ namespace Restaurants.API.Controllers.Tests;
+@@ -14,14 +24,65 @@ public class RestaurantsControllerTests : IClassFixture<WebApplicationFactory<Pr
+     // * The term "factory" in WebApplicationFactory<Program> is intentionally chosen to reflect its role in
+     // * manufacturing both the test server and the HttpClient instances needed for integration testing.
+     private readonly WebApplicationFactory<Program> _factory;
++    private readonly Mock<IRestaurantsRepository> _restaurantsRepositoryMock = new();
+ 
+     public RestaurantsControllerTests(WebApplicationFactory<Program> factory)
+     {
+-        _factory = factory;
++        _factory = factory.WithWebHostBuilder(builder =>
++        {
++            builder.ConfigureTestServices(services =>
++            {
++                services.AddSingleton<IPolicyEvaluator, FakePolicyEvaluator>();
++                // Replace the actual repository with the mock repository
++                services.Replace(ServiceDescriptor.Scoped<IRestaurantsRepository>(_ => _restaurantsRepositoryMock.Object));
++            });
++        });
++    }
 +
-+namespace Restaurants.API.Controllers.Tests;
-+
-+public class RestaurantsControllerTests : IClassFixture<WebApplicationFactory<Program>>
-+{
-+    // The term "factory" is used because WebApplicationFactory<Program> sets up a test server 
-+    // that mimics the behavior of our actual API application. It effectively "manufactures" 
-+    // instances of our API for integration testing purposes.
-+    // The factory will also allow us to create a new HttpClient for each test, which is useful for making requests to the API.
-+    // * The term "factory" in WebApplicationFactory<Program> is intentionally chosen to reflect its role in
-+    // * manufacturing both the test server and the HttpClient instances needed for integration testing.
-+    private readonly WebApplicationFactory<Program> _factory;
-+
-+    public RestaurantsControllerTests(WebApplicationFactory<Program> factory)
++    // getById for existing id should return 200 OK, with the correct data
++    [Fact]
++    public async Task GetById_ForExistingId_ShouldReturn200OK()
 +    {
-+        _factory = factory;
++        // Arrange
++        var id = 99;
++
++        var restaurant = new Restaurant { Id = id, Name = "Test Restaurant", Description = "Test Description" };
++
++        _restaurantsRepositoryMock.Setup(x => x.GetById(id)).ReturnsAsync(restaurant);
++
++        var client = _factory.CreateClient();
++
++        // Act
++        var response = await client.GetAsync($"/api/restaurants/{id}");
++        var restaurantDto = await response.Content.ReadFromJsonAsync<RestaurantDto>();
++
++        // Assert
++        response.StatusCode.Should().Be(HttpStatusCode.OK);
++        restaurantDto.Should().NotBeNull();
++        restaurantDto.Name.Should().Be("Test Restaurant");
++        restaurantDto.Description.Should().Be("Test Description");
 +    }
 +
 +    [Fact()]
-+    public async Task GetAll_ForValidRequest_Returns200OkAsync()
++    public async Task GetById_ForNonExistingId_ShouldReturn404NotFound()
 +    {
 +        // Arrange
++        var id = 999;
++
++        // Regardless of the executing machine, the test will now always return the same result.
++        _restaurantsRepositoryMock.Setup(x => x.GetById(id)).ReturnsAsync((Restaurant?)null);    
++
 +        var client = _factory.CreateClient();
 +
 +        // Act
-+        var result = await client.GetAsync("/api/restaurants?pageNumber=1&pageSize=10");
++        var result = await client.GetAsync($"/api/restaurants/{id}");
 +
 +        // Assert
-+        result.StatusCode.Should().Be(HttpStatusCode.OK);
++        result.StatusCode.Should().Be(HttpStatusCode.NotFound);
+     }
+ 
+     [Fact()]
+-    public async Task GetAll_ForValidRequest_Returns200OkAsync()
++    public async Task GetAll_ForValidRequest_ShouldReturn200Ok()
+     {
+         // Arrange
+         var client = _factory.CreateClient();
+@@ -35,7 +96,7 @@ public class RestaurantsControllerTests : IClassFixture<WebApplicationFactory<Pr
+ 
+     // get all for invalid request return 400 BadRequest
+     [Fact]
+-    public async Task GetAll_ForInvalidRequest_Returns400BadRequestAsync()
++    public async Task GetAll_ForInvalidRequest_ShouldReturn400BadRequest()
+     {
+         // Arrange
+         var client = _factory.CreateClient();
+diff --git a/Restaurants.API.Tests/FakePolicyEvaluator.cs b/Restaurants.API.Tests/FakePolicyEvaluator.cs
+new file mode 100644
+index 0000000..22b4699
+--- /dev/null
++++ b/Restaurants.API.Tests/FakePolicyEvaluator.cs
+@@ -0,0 +1,32 @@
++using System.Security.Claims;
++using Microsoft.AspNetCore.Authentication;
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Authorization.Policy;
++using Microsoft.AspNetCore.Http;
++
++namespace Restaurants.API.Tests;
++
++public class FakePolicyEvaluator : IPolicyEvaluator
++{
++    public Task<AuthenticateResult> AuthenticateAsync(AuthorizationPolicy policy, HttpContext context)
++    {
++        var claimsPrincipal = new ClaimsPrincipal();
++
++        claimsPrincipal.AddIdentity(new ClaimsIdentity(
++            [
++                new Claim(ClaimTypes.NameIdentifier, "1"),
++                new Claim(ClaimTypes.Role, "Admin"),
++            ]));
++
++        var ticket = new AuthenticationTicket(claimsPrincipal, "Test");
++        var result = AuthenticateResult.Success(ticket);
++
++        return Task.FromResult(result);
 +    }
 +
-+    // get all for invalid request return 400 BadRequest
-+    [Fact]
-+    public async Task GetAll_ForInvalidRequest_Returns400BadRequestAsync()
++    public Task<PolicyAuthorizationResult> AuthorizeAsync(AuthorizationPolicy policy, AuthenticateResult authenticationResult, HttpContext context, object? resource)
 +    {
-+        // Arrange
-+        var client = _factory.CreateClient();
-+
-+        // Act
-+        var result = await client.GetAsync("/api/restaurants");
-+
-+        // Assert
-+        result.StatusCode.Should().Be(HttpStatusCode.BadRequest);        
-+    }   
++        var result = PolicyAuthorizationResult.Success();
++        return Task.FromResult(result);
++    }
 +}
 \ No newline at end of file
-diff --git a/Restaurants.API.Tests/Restaurants.API.Tests.csproj b/Restaurants.API.Tests/Restaurants.API.Tests.csproj
-index 5dc649d..f1fbefd 100644
---- a/Restaurants.API.Tests/Restaurants.API.Tests.csproj
-+++ b/Restaurants.API.Tests/Restaurants.API.Tests.csproj
-@@ -12,6 +12,7 @@
-   <ItemGroup>
-     <PackageReference Include="coverlet.collector" Version="6.0.0" />
-     <PackageReference Include="FluentAssertions" Version="6.12.1" />
-+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.8" />
-     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-     <PackageReference Include="Moq" Version="4.20.72" />
-     <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
-diff --git a/Restaurants.API/Controllers/RestaurantsController.cs b/Restaurants.API/Controllers/RestaurantsController.cs
-index 8ea33b4..2eb5c85 100644
---- a/Restaurants.API/Controllers/RestaurantsController.cs
-+++ b/Restaurants.API/Controllers/RestaurantsController.cs
-@@ -14,16 +14,6 @@ namespace Restaurants.API.Controllers;
- [Route("api/[controller]")]
- public class RestaurantsController(IMediator mediator) : ControllerBase
- {
--    [HttpPost]
--    [Authorize(Roles = UserRoles.Owner)]
--    // FluentValidator will automatically validate the request because we have scanned the assembly and it knows that CreateRestaurantCommand has a validator.
--    public async Task<IActionResult> CreateRestaurant(CreateRestaurantCommand command)
--    {
--        int id = await mediator.Send(command);
--
--        return CreatedAtAction(nameof(GetById), new { id }, null);
--    }
--
-     [HttpGet]
-     [AllowAnonymous]
-     // [Authorize(Policy = PolicyNames.CreatedAtLeast2Restaurants)]
-@@ -33,6 +23,16 @@ public class RestaurantsController(IMediator mediator) : ControllerBase
- 
-         return Ok(restaurants);
-     }
-+        
-+    [HttpPost]
-+    [Authorize(Roles = UserRoles.Owner)]
-+    // FluentValidator will automatically validate the request because we have scanned the assembly and it knows that CreateRestaurantCommand has a validator.
-+    public async Task<IActionResult> CreateRestaurant(CreateRestaurantCommand command)
-+    {
-+        int id = await mediator.Send(command);
-+
-+        return CreatedAtAction(nameof(GetById), new { id }, null);
-+    }
- 
-     [HttpGet]
-     [Route("{id}")]
-diff --git a/Restaurants.API/Program.cs b/Restaurants.API/Program.cs
-index 4b5171b..b4f7d4b 100644
---- a/Restaurants.API/Program.cs
-+++ b/Restaurants.API/Program.cs
-@@ -60,3 +60,9 @@ app.UseAuthorization();
- app.MapControllers();
- 
- app.Run();
-+
-+
-+
-+// This is required for the WebApplicationFactory in our tests to be able to build the app.
-+// partial means that this file is a partial class, and we can add more code to it in other files.
-+public partial class Program { }

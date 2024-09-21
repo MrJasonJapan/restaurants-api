@@ -1,3 +1,30 @@
+commit 6d89f0f11ddd47f1e9524f638f9f23751a601ca3
+Author: Jason Gettys <jason@digital-knowledge.co.jp>
+Date:   Sat Sep 21 00:46:35 2024 +0900
+
+    Add Integration Tests for RestaurantsController and Refactor Program.cs
+    
+    - Created RestaurantsControllerTests class for integration testing:
+      - Implemented test for successful GET request to /api/restaurants endpoint.
+      - Added test for invalid GET request to /api/restaurants without required parameters.
+      - Utilized WebApplicationFactory<Program> for setting up test server and HTTP client.
+    
+    - Updated Restaurants.API.Tests.csproj:
+      - Added Microsoft.AspNetCore.Mvc.Testing package for integration testing.
+    
+    - Refactored RestaurantsController:
+      - Reordered methods to improve readability (GET methods before POST).
+    
+    - Modified Program.cs:
+      - Added partial class declaration for Program to support WebApplicationFactory in tests.
+    
+    These changes enhance the API's testability by introducing integration tests for the
+    RestaurantsController. The use of WebApplicationFactory allows for in-memory testing of
+    the entire API, including middleware and dependency injection. The refactoring of
+    RestaurantsController and Program.cs improves code organization and supports the new
+    testing approach. This commit builds upon previous testing efforts, extending coverage
+    to include API-level integration tests.
+
 commit fda23924fee161198fbf0ef21176499594a8d469
 Author: Jason Gettys <jason@digital-knowledge.co.jp>
 Date:   Sat Sep 21 00:22:36 2024 +0900
